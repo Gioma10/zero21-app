@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.pill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0A0F1499",
+    backgroundColor: "#19151299",
   },
   body: {
     paddingHorizontal: Spacing.three,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.pill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0A0F1433",
+    backgroundColor: "#19151233",
   },
   cartBadgeText: { color: colors.background },
   cartBarLabel: {

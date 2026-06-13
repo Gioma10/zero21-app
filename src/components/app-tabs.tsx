@@ -3,13 +3,15 @@ import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { Colors } from "@/constants/theme";
 
 export default function AppTabs() {
-  const colors = Colors.dark; // app sempre in dark "Notte Smeralda"
+  const colors = Colors.dark; // app sempre in dark "Tramonto Pevero"
 
   return (
     <NativeTabs
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundSelected}
-      labelStyle={{ selected: { color: colors.accent } }}
+      tintColor={colors.accent} // colore della tab SELEZIONATA (icona + etichetta)
+      iconColor={colors.textSecondary} // colore delle icone NON selezionate
+      labelStyle={{ color: colors.textSecondary, selected: { color: colors.accent } }}
     >
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
