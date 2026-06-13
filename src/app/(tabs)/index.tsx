@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -24,7 +25,13 @@ export default function HomeScreen() {
   const [selected, setSelected] = useState("all");
 
   // Carica i ristoranti dal database. TanStack Query ci dà data + stati.
-  const { data: restaurants = [], isLoading, isError } = useRestaurants();
+  const {
+    data: restaurants = [],
+    isLoading,
+    isError,
+    isRefetching,
+    refetch,
+  } = useRestaurants();
 
   // Filtra i ristoranti per categoria (tag). "all" = tutti.
   const visibleRestaurants =
@@ -35,7 +42,17 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.screen}>
       <SafeAreaView edges={["top"]} style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={colors.accent}
+            />
+          }
+        >
           {/* HEADER */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
@@ -43,9 +60,17 @@ export default function HomeScreen() {
                 Consegna a
               </ThemedText>
               <View style={styles.location}>
-                <SymbolView name="location.fill" size={16} tintColor={colors.accent} />
+                <SymbolView
+                  name="location.fill"
+                  size={16}
+                  tintColor={colors.accent}
+                />
                 <ThemedText type="smallBold">Arzachena, Centro</ThemedText>
-                <SymbolView name="chevron.down" size={12} tintColor={colors.textSecondary} />
+                <SymbolView
+                  name="chevron.down"
+                  size={12}
+                  tintColor={colors.textSecondary}
+                />
               </View>
             </View>
             <Image
@@ -58,7 +83,11 @@ export default function HomeScreen() {
           {/* RICERCA + FILTRI */}
           <View style={styles.searchRow}>
             <View style={styles.search}>
-              <SymbolView name="magnifyingglass" size={18} tintColor={colors.textSecondary} />
+              <SymbolView
+                name="magnifyingglass"
+                size={18}
+                tintColor={colors.textSecondary}
+              />
               <TextInput
                 placeholder="Cerca ristoranti o piatti..."
                 placeholderTextColor={colors.textSecondary}
@@ -66,7 +95,11 @@ export default function HomeScreen() {
               />
             </View>
             <Pressable style={styles.filterBtn}>
-              <SymbolView name="slider.horizontal.3" size={18} tintColor={colors.background} />
+              <SymbolView
+                name="slider.horizontal.3"
+                size={18}
+                tintColor={colors.background}
+              />
             </Pressable>
           </View>
 
@@ -79,7 +112,11 @@ export default function HomeScreen() {
             {categories.map((cat) => {
               const isActive = cat.id === selected;
               return (
-                <Pressable key={cat.id} onPress={() => setSelected(cat.id)} style={styles.category}>
+                <Pressable
+                  key={cat.id}
+                  onPress={() => setSelected(cat.id)}
+                  style={styles.category}
+                >
                   <View
                     style={[
                       styles.categoryIcon,
@@ -92,10 +129,15 @@ export default function HomeScreen() {
                     <SymbolView
                       name={cat.icon}
                       size={20}
-                      tintColor={isActive ? colors.background : colors.textSecondary}
+                      tintColor={
+                        isActive ? colors.background : colors.textSecondary
+                      }
                     />
                   </View>
-                  <ThemedText type="small" themeColor={isActive ? "text" : "textSecondary"}>
+                  <ThemedText
+                    type="small"
+                    themeColor={isActive ? "text" : "textSecondary"}
+                  >
                     {cat.label}
                   </ThemedText>
                 </Pressable>
@@ -103,26 +145,14 @@ export default function HomeScreen() {
             })}
           </ScrollView>
 
-          {/* BANNER PROMO */}
-          <View style={styles.banner}>
-            <View style={styles.bannerText}>
-              <ThemedText type="subtitle" style={styles.bannerTitle}>
-                50% di sconto
-              </ThemedText>
-              <ThemedText type="small" style={styles.bannerSubtitle}>
-                sul tuo primo ordine
-              </ThemedText>
-            </View>
-            <SymbolView name="gift.fill" size={48} tintColor={colors.background} />
-          </View>
-
           {/* LISTA RISTORANTI */}
           <ThemedText type="subtitle">Ristoranti</ThemedText>
           {isLoading ? (
             <ActivityIndicator color={colors.accent} style={styles.loader} />
           ) : isError ? (
             <ThemedText type="small" themeColor="textSecondary">
-              Impossibile caricare i ristoranti. Controlla la connessione e riprova.
+              Impossibile caricare i ristoranti. Controlla la connessione e
+              riprova.
             </ThemedText>
           ) : (
             <View style={styles.list}>
