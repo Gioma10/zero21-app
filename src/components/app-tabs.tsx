@@ -1,9 +1,9 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function AppTabs() {
-  const colors = Colors.dark; // app sempre in dark "Tramonto Pevero"
+  const colors = useTheme(); // segue il tema corrente (light/dark)
 
   return (
     <NativeTabs

@@ -8,31 +8,37 @@ import "@/global.css";
 import { Platform } from "react-native";
 
 export const Colors = {
+  // Costa Smeralda "di giorno": sabbia calda e luminosa, verde smeraldo, oro.
   light: {
-    text: "#EAE0D5",
-    textSecondary: "#998C80",
-    background: "#191512",
-    card: "#221C18",
-    backgroundElement: "#221C18",
-    backgroundSelected: "#2C251F",
-    border: "#2E2620",
-    accent: "#D08A68",
-    accentSecondary: "#CBA978",
+    text: "#1C2B22",
+    textSecondary: "#6B7A6C",
+    background: "#F6F0E4",
+    card: "#FFFDF7",
+    backgroundElement: "#FFFDF7",
+    backgroundSelected: "#ECE3D0",
+    border: "#E3D9C5",
+    accent: "#1FA774",
+    accentSecondary: "#C99A4E",
   },
+  // Costa Smeralda "di sera": verde caldo, smeraldo brillante, sabbia/oro.
   dark: {
-    text: "#EAE0D5",
-    textSecondary: "#998C80",
-    background: "#191512",
-    card: "#221C18",
-    backgroundElement: "#221C18",
-    backgroundSelected: "#2C251F",
-    border: "#2E2620",
-    accent: "#D08A68",
-    accentSecondary: "#CBA978",
+    text: "#EFEADD",
+    textSecondary: "#9AA796",
+    background: "#121A14",
+    card: "#1B241D",
+    backgroundElement: "#1B241D",
+    backgroundSelected: "#27322A",
+    border: "#2E3A30",
+    accent: "#2BB888",
+    accentSecondary: "#E0C07A",
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+// La forma di una palette (chiavi uguali, valori stringa) — utile per tipizzare
+// le funzioni che costruiscono gli stili dal tema corrente.
+export type Palette = Record<ThemeColor, string>;
 
 export const Fonts = Platform.select({
   ios: {

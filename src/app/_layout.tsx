@@ -1,43 +1,55 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { DarkTheme, Stack, ThemeProvider, useRouter, useSegments } from "expo-router";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter, useSegments } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import { AuthProvider, useAuth } from "@/context/auth";
 import { CartProvider } from "@/context/cart";
+import { ThemeModeProvider, useThemeMode } from "@/context/theme-mode";
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={DarkTheme}>
-        {/* AuthProvider sopra a tutto: ogni schermata sa se c'è un utente loggato */}
-        <AuthProvider>
-          <CartProvider>
-            <AnimatedSplashOverlay />
-            <RootNavigator />
-          </CartProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      {/* ThemeModeProvider in cima: tiene il tema (light/dark) per tutta l'app */}
+      <ThemeModeProvider>
+        <ThemedApp />
+      </ThemeModeProvider>
     </QueryClientProvider>
   );
 }
 
-// Componente separato: sta DENTRO l'AuthProvider, quindi può usare useAuth.
+// Sta DENTRO ThemeModeProvider, quindi può leggere il mode per status bar e chrome.
+function ThemedApp() {
+  const { mode } = useThemeMode();
+  return (
+    <ThemeProvider value={mode === "dark" ? DarkTheme : DefaultTheme}>
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
+      <AuthProvider>
+        <CartProvider>
+          <AnimatedSplashOverlay />
+          <RootNavigator />
+        </CartProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
 function RootNavigator() {
   const { session, isLoading } = useAuth();
-  const segments = useSegments(); // pezzi dell'URL corrente, es. ["login"] o ["(tabs)"]
+  const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return; // aspetta di sapere se c'è una sessione salvata
+    if (isLoading) return;
 
     const inLogin = segments[0] === "login";
     if (!session && !inLogin) {
-      router.replace("/login"); // non loggato → al login
+      router.replace("/login");
     } else if (session && inLogin) {
-      router.replace("/"); // loggato ma sul login → entra nell'app
+      router.replace("/");
     }
   }, [session, isLoading, segments, router]);
 

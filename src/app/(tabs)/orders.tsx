@@ -4,12 +4,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { OrderCard } from "@/components/order-card";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { useOrders } from "@/hooks/use-orders";
-
-const colors = Colors.dark;
+import { useTheme } from "@/hooks/use-theme";
 
 export default function OrdersScreen() {
+  const colors = useTheme();
   const { data: orders = [], isLoading, isError, refetch, isRefetching } = useOrders();
 
   return (

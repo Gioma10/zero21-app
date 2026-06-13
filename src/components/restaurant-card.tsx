@@ -1,17 +1,19 @@
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Colors, Radii, Spacing } from "@/constants/theme";
+import { Radii, Spacing, type Palette } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import type { Restaurant } from "@/types";
 
-const colors = Colors.dark;
-
 export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
+  const colors = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
-    // Link = navigazione. asChild dice "usa il Pressable qui sotto come bottone".
     <Link href={`/restaurant/${restaurant.id}`} asChild>
       <Pressable style={styles.card}>
         <Image
@@ -54,52 +56,53 @@ export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    gap: Spacing.three,
-    padding: Spacing.two,
-    borderRadius: Radii.card,
-    backgroundColor: colors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  image: {
-    width: 92,
-    height: 92,
-    borderRadius: Radii.sm,
-  },
-  info: {
-    flex: 1,
-    justifyContent: "center",
-    gap: Spacing.one,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: Spacing.two,
-  },
-  name: {
-    flex: 1,
-  },
-  rating: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.half,
-  },
-  ratingText: {
-    color: colors.accent,
-    fontWeight: "700",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  meta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.half,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: "row",
+      gap: Spacing.three,
+      padding: Spacing.two,
+      borderRadius: Radii.card,
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    image: {
+      width: 92,
+      height: 92,
+      borderRadius: Radii.sm,
+    },
+    info: {
+      flex: 1,
+      justifyContent: "center",
+      gap: Spacing.one,
+    },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: Spacing.two,
+    },
+    name: {
+      flex: 1,
+    },
+    rating: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: Spacing.half,
+    },
+    ratingText: {
+      color: colors.accent,
+      fontWeight: "700",
+    },
+    metaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    meta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: Spacing.half,
+    },
+  });

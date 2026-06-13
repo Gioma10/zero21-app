@@ -1,10 +1,10 @@
+import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Colors, Radii, Spacing } from "@/constants/theme";
+import { Radii, Spacing, type Palette } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import type { Order, OrderStatus } from "@/types";
-
-const colors = Colors.dark;
 
 // Formatta il timestamp ISO del DB in "13/06 · 20:45" (senza dipendere da Intl).
 function formatDate(iso: string) {
@@ -16,19 +16,21 @@ function formatDate(iso: string) {
   return `${dd}/${mm} · ${hh}:${min}`;
 }
 
-function statusColor(status: OrderStatus) {
+function statusColor(status: OrderStatus, colors: Palette) {
   switch (status) {
     case "Consegnato":
-      return colors.accentSecondary; // menta = successo
+      return colors.accentSecondary; // sabbia/oro = successo
     case "Annullato":
       return colors.textSecondary; // grigio = inattivo
     default:
-      return colors.accent; // turchese = in corso
+      return colors.accent; // verde = in corso
   }
 }
 
 export function OrderCard({ order }: { order: Order }) {
-  const color = statusColor(order.status);
+  const colors = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const color = statusColor(order.status, colors);
   const summary = order.items.map((i) => `${i.qty}× ${i.name}`).join(", ");
 
   return (
@@ -62,36 +64,37 @@ export function OrderCard({ order }: { order: Order }) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    gap: Spacing.two,
-    padding: Spacing.three,
-    borderRadius: Radii.card,
-    backgroundColor: colors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.one,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.half,
-    borderRadius: Radii.pill,
-    borderWidth: 1,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: Radii.pill,
-  },
-  total: {
-    color: colors.accent,
-    fontWeight: "700",
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    card: {
+      gap: Spacing.two,
+      padding: Spacing.three,
+      borderRadius: Radii.card,
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    badge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: Spacing.one,
+      paddingHorizontal: Spacing.two,
+      paddingVertical: Spacing.half,
+      borderRadius: Radii.pill,
+      borderWidth: 1,
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: Radii.pill,
+    },
+    total: {
+      color: colors.accent,
+      fontWeight: "700",
+    },
+  });

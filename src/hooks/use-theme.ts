@@ -1,14 +1,10 @@
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * Restituisce la palette del tema CORRENTE (light o dark), presa dal
+ * ThemeModeProvider. Essendo un hook di context, ogni componente che lo usa
+ * si ri-renderizza automaticamente quando si cambia tema.
  */
-
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeMode } from "@/context/theme-mode";
 
 export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
-
-  return Colors[theme];
+  return useThemeMode().colors;
 }

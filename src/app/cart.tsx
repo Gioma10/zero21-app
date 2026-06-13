@@ -1,16 +1,16 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useMemo } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors, Radii, Spacing } from "@/constants/theme";
+import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { useCart } from "@/context/cart";
+import { useTheme } from "@/hooks/use-theme";
 import { useCreateOrder } from "@/hooks/use-orders";
-
-const colors = Colors.dark;
 
 // Costi fissi (in futuro arriveranno dal ristorante / backend).
 const DELIVERY_FEE = 3.99;
@@ -19,12 +19,13 @@ const SERVICE_FEE = 2.0;
 export default function CartScreen() {
   const cart = useCart();
   const createOrder = useCreateOrder();
+  const colors = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const total = cart.subtotal + DELIVERY_FEE + SERVICE_FEE;
 
   function checkout() {
     createOrder.mutate(
       {
-        // "scatto" dei piatti nel carrello: nome, quantità e prezzo attuali
         items: cart.items.map((i) => ({
           name: i.dish.name,
           qty: i.qty,
@@ -35,8 +36,6 @@ export default function CartScreen() {
       {
         onSuccess: (order) => {
           cart.clear();
-          // Sostituisco il carrello con la pagina di conferma (replace = niente
-          // "indietro" verso un carrello ormai vuoto). Passo l'id dell'ordine.
           router.replace({ pathname: "/order-success", params: { id: order.id } });
         },
         onError: () => {
@@ -71,10 +70,7 @@ export default function CartScreen() {
           </View>
         ) : (
           <>
-            <ScrollView
-              contentContainerStyle={styles.content}
-              showsVerticalScrollIndicator={false}
-            >
+            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
               {/* ARTICOLI */}
               {cart.items.map(({ dish, qty }) => (
                 <View key={dish.id} style={styles.item}>
@@ -159,10 +155,10 @@ export default function CartScreen() {
   );
 }
 
-// Piccolo componente locale: una riga "etichetta ........ valore €".
+// Riga "etichetta ........ valore €". Layout-only, nessun colore proprio.
 function SummaryRow({ label, value }: { label: string; value: number }) {
   return (
-    <View style={styles.summaryRow}>
+    <View style={summaryRowStyle}>
       <ThemedText type="small" themeColor="textSecondary">
         {label}
       </ThemedText>
@@ -173,115 +169,122 @@ function SummaryRow({ label, value }: { label: string; value: number }) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  safe: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-  },
-  empty: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.three,
-  },
-  content: {
-    paddingHorizontal: Spacing.three,
-    paddingBottom: Spacing.four,
-    gap: Spacing.three,
-  },
-  item: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.three,
-    padding: Spacing.two,
-    borderRadius: Radii.card,
-    backgroundColor: colors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  itemImage: {
-    width: 64,
-    height: 64,
-    borderRadius: Radii.sm,
-  },
-  itemInfo: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  price: {
-    color: colors.accent,
-    fontWeight: "700",
-  },
-  stepper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.two,
-  },
-  stepBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: Radii.sm,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  qty: {
-    minWidth: 16,
-    textAlign: "center",
-  },
-  promo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.two,
-    padding: Spacing.three,
-    borderRadius: Radii.card,
-    backgroundColor: colors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  promoLabel: { flex: 1 },
-  summary: {
-    gap: Spacing.two,
-    paddingTop: Spacing.two,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
-    marginVertical: Spacing.one,
-  },
-  total: {
-    color: colors.accent,
-    fontWeight: "700",
-    fontSize: 18,
-  },
-  footer: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.two,
-  },
-  checkout: {
-    height: 56,
-    borderRadius: Radii.card,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.accent,
-  },
-  checkoutDisabled: {
-    opacity: 0.6,
-  },
-  checkoutText: {
-    color: colors.background,
-    fontWeight: "700",
-    fontSize: 16,
-  },
-});
+const summaryRowStyle = {
+  flexDirection: "row" as const,
+  justifyContent: "space-between" as const,
+  alignItems: "center" as const,
+};
+
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    screen: { flex: 1 },
+    safe: { flex: 1 },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: Spacing.three,
+      paddingVertical: Spacing.three,
+    },
+    empty: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: Spacing.three,
+    },
+    content: {
+      paddingHorizontal: Spacing.three,
+      paddingBottom: Spacing.four,
+      gap: Spacing.three,
+    },
+    item: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: Spacing.three,
+      padding: Spacing.two,
+      borderRadius: Radii.card,
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    itemImage: {
+      width: 64,
+      height: 64,
+      borderRadius: Radii.sm,
+    },
+    itemInfo: {
+      flex: 1,
+      gap: Spacing.half,
+    },
+    price: {
+      color: colors.accent,
+      fontWeight: "700",
+    },
+    stepper: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: Spacing.two,
+    },
+    stepBtn: {
+      width: 28,
+      height: 28,
+      borderRadius: Radii.sm,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: colors.accent,
+    },
+    qty: {
+      minWidth: 16,
+      textAlign: "center",
+    },
+    promo: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: Spacing.two,
+      padding: Spacing.three,
+      borderRadius: Radii.card,
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    promoLabel: { flex: 1 },
+    summary: {
+      gap: Spacing.two,
+      paddingTop: Spacing.two,
+    },
+    summaryRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.border,
+      marginVertical: Spacing.one,
+    },
+    total: {
+      color: colors.accent,
+      fontWeight: "700",
+      fontSize: 18,
+    },
+    footer: {
+      paddingHorizontal: Spacing.three,
+      paddingTop: Spacing.two,
+    },
+    checkout: {
+      height: 56,
+      borderRadius: Radii.card,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.accent,
+    },
+    checkoutDisabled: {
+      opacity: 0.6,
+    },
+    checkoutText: {
+      color: colors.background,
+      fontWeight: "700",
+      fontSize: 16,
+    },
+  });

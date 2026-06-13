@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,18 +12,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors, Radii, Spacing } from "@/constants/theme";
+import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { useAuth } from "@/context/auth";
-
-const colors = Colors.dark;
+import { useTheme } from "@/hooks/use-theme";
 
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
+  const colors = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +34,12 @@ export default function LoginScreen() {
 
   async function submit() {
     setMessage(null);
+
+    if (isSignup && password !== confirmPassword) {
+      setMessage("Le password non coincidono");
+      return;
+    }
+
     setLoading(true);
     const { error } = isSignup
       ? await signUp(email.trim(), password, { displayName: name.trim(), phone: phone.trim() })
@@ -40,11 +49,9 @@ export default function LoginScreen() {
     if (error) {
       setMessage(error);
     } else if (isSignup) {
-      // Se la conferma email è attiva, qui non c'è ancora una sessione.
       setMessage("Registrazione completata! Ora puoi accedere.");
       setMode("signin");
     }
-    // Se il login va a buon fine, il redirect in _layout porta dentro l'app.
   }
 
   return (
@@ -103,6 +110,16 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
               />
+              {isSignup && (
+                <TextInput
+                  placeholder="Conferma password"
+                  placeholderTextColor={colors.textSecondary}
+                  style={styles.input}
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+              )}
 
               {message && (
                 <ThemedText type="small" style={styles.message}>
@@ -142,58 +159,59 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  safe: { flex: 1 },
-  kav: { flex: 1 },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.two,
-  },
-  brand: {
-    textAlign: "center",
-    color: colors.accent,
-  },
-  subtitle: {
-    textAlign: "center",
-    marginBottom: Spacing.three,
-  },
-  form: {
-    gap: Spacing.three,
-  },
-  input: {
-    height: 52,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Radii.card,
-    backgroundColor: colors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    color: colors.text,
-    fontSize: 16,
-  },
-  message: {
-    color: colors.accentSecondary,
-    textAlign: "center",
-  },
-  button: {
-    height: 56,
-    borderRadius: Radii.card,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.accent,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: colors.background,
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  toggle: {
-    textAlign: "center",
-    marginTop: Spacing.three,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    screen: { flex: 1 },
+    safe: { flex: 1 },
+    kav: { flex: 1 },
+    content: {
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: Spacing.four,
+      gap: Spacing.two,
+    },
+    brand: {
+      textAlign: "center",
+      color: colors.accent,
+    },
+    subtitle: {
+      textAlign: "center",
+      marginBottom: Spacing.three,
+    },
+    form: {
+      gap: Spacing.three,
+    },
+    input: {
+      height: 52,
+      paddingHorizontal: Spacing.three,
+      borderRadius: Radii.card,
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      color: colors.text,
+      fontSize: 16,
+    },
+    message: {
+      color: colors.accentSecondary,
+      textAlign: "center",
+    },
+    button: {
+      height: 56,
+      borderRadius: Radii.card,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.accent,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      color: colors.background,
+      fontWeight: "700",
+      fontSize: 16,
+    },
+    toggle: {
+      textAlign: "center",
+      marginTop: Spacing.three,
+    },
+  });

@@ -1,17 +1,19 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useMemo } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors, Radii, Spacing } from "@/constants/theme";
+import { Radii, Spacing, type Palette } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { useOrder } from "@/hooks/use-orders";
-
-const colors = Colors.dark;
 
 export default function OrderSuccessScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const colors = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   // Grazie al setQueryData fatto al checkout, l'ordine è già in cache: niente attesa.
   const { data: order, isLoading } = useOrder(id);
 
@@ -78,63 +80,64 @@ export default function OrderSuccessScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  safe: { flex: 1 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  content: {
-    padding: Spacing.three,
-    gap: Spacing.three,
-    alignItems: "center",
-  },
-  iconWrap: {
-    marginTop: Spacing.six,
-  },
-  title: {
-    textAlign: "center",
-  },
-  subtitle: {
-    textAlign: "center",
-  },
-  card: {
-    alignSelf: "stretch",
-    gap: Spacing.two,
-    padding: Spacing.three,
-    marginTop: Spacing.three,
-    borderRadius: Radii.card,
-    backgroundColor: colors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  itemRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
-    marginVertical: Spacing.one,
-  },
-  total: {
-    color: colors.accent,
-    fontWeight: "700",
-    fontSize: 18,
-  },
-  footer: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.two,
-  },
-  button: {
-    height: 56,
-    borderRadius: Radii.card,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.accent,
-  },
-  buttonText: {
-    color: colors.background,
-    fontWeight: "700",
-    fontSize: 16,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    screen: { flex: 1 },
+    safe: { flex: 1 },
+    center: { flex: 1, alignItems: "center", justifyContent: "center" },
+    content: {
+      padding: Spacing.three,
+      gap: Spacing.three,
+      alignItems: "center",
+    },
+    iconWrap: {
+      marginTop: Spacing.six,
+    },
+    title: {
+      textAlign: "center",
+    },
+    subtitle: {
+      textAlign: "center",
+    },
+    card: {
+      alignSelf: "stretch",
+      gap: Spacing.two,
+      padding: Spacing.three,
+      marginTop: Spacing.three,
+      borderRadius: Radii.card,
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    itemRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.border,
+      marginVertical: Spacing.one,
+    },
+    total: {
+      color: colors.accent,
+      fontWeight: "700",
+      fontSize: 18,
+    },
+    footer: {
+      paddingHorizontal: Spacing.three,
+      paddingTop: Spacing.two,
+    },
+    button: {
+      height: 56,
+      borderRadius: Radii.card,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.accent,
+    },
+    buttonText: {
+      color: colors.background,
+      fontWeight: "700",
+      fontSize: 16,
+    },
+  });
