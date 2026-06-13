@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors, Radii, Spacing } from "@/constants/theme";
+import { useAuth } from "@/context/auth";
 
 const colors = Colors.dark;
 
@@ -16,6 +17,12 @@ const menuItems: { icon: SFSymbol; label: string }[] = [
 ];
 
 export default function ProfileScreen() {
+  const { user, signOut } = useAuth();
+  const email = user?.email ?? "";
+  const displayName = (user?.user_metadata?.display_name as string) || email.split("@")[0] || "Utente";
+  const phone = (user?.user_metadata?.phone as string) || "";
+  const initial = displayName.charAt(0).toUpperCase() || "?";
+
   return (
     <ThemedView style={styles.screen}>
       <SafeAreaView edges={["top"]} style={styles.safe}>
@@ -23,13 +30,20 @@ export default function ProfileScreen() {
           {/* Intestazione utente */}
           <View style={styles.userRow}>
             <View style={styles.avatar}>
-              <ThemedText style={styles.avatarText}>G</ThemedText>
+              <ThemedText style={styles.avatarText}>{initial}</ThemedText>
             </View>
             <View style={styles.userInfo}>
-              <ThemedText type="subtitle">Gioma</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                g.mauro@drivedrop.it
+              <ThemedText type="subtitle" numberOfLines={1}>
+                {displayName}
               </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                {email}
+              </ThemedText>
+              {phone ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {phone}
+                </ThemedText>
+              ) : null}
             </View>
           </View>
 
@@ -47,7 +61,7 @@ export default function ProfileScreen() {
           </View>
 
           {/* Logout */}
-          <Pressable style={styles.logout}>
+          <Pressable style={styles.logout} onPress={signOut}>
             <SymbolView
               name="rectangle.portrait.and.arrow.right.fill"
               size={20}
