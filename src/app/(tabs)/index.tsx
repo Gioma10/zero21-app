@@ -1,19 +1,30 @@
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { RestaurantCard } from "@/components/restaurant-card";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors, Radii, Spacing } from "@/constants/theme";
-import { categories, restaurants } from "@/data/mock";
+import { categories } from "@/data/mock";
+import { useRestaurants } from "@/hooks/use-restaurants";
 
 const colors = Colors.dark;
 
 export default function HomeScreen() {
   const [selected, setSelected] = useState("all");
+
+  // Carica i ristoranti dal database. TanStack Query ci dà data + stati.
+  const { data: restaurants = [], isLoading, isError } = useRestaurants();
 
   // Filtra i ristoranti per categoria (tag). "all" = tutti.
   const visibleRestaurants =
@@ -107,11 +118,19 @@ export default function HomeScreen() {
 
           {/* LISTA RISTORANTI */}
           <ThemedText type="subtitle">Ristoranti</ThemedText>
-          <View style={styles.list}>
-            {visibleRestaurants.map((r) => (
-              <RestaurantCard key={r.id} restaurant={r} />
-            ))}
-          </View>
+          {isLoading ? (
+            <ActivityIndicator color={colors.accent} style={styles.loader} />
+          ) : isError ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              Impossibile caricare i ristoranti. Controlla la connessione e riprova.
+            </ThemedText>
+          ) : (
+            <View style={styles.list}>
+              {visibleRestaurants.map((r) => (
+                <RestaurantCard key={r.id} restaurant={r} />
+              ))}
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -213,5 +232,8 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: Spacing.three,
+  },
+  loader: {
+    marginTop: Spacing.four,
   },
 });

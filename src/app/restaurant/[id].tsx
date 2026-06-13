@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MenuItem } from "@/components/menu-item";
@@ -9,7 +9,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors, Radii, Spacing } from "@/constants/theme";
 import { useCart } from "@/context/cart";
-import { dishes, restaurants } from "@/data/mock";
+import { useDishes } from "@/hooks/use-dishes";
+import { useRestaurant } from "@/hooks/use-restaurants";
 import type { DishSection } from "@/types";
 
 const colors = Colors.dark;
@@ -22,8 +23,20 @@ export default function RestaurantScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const cart = useCart();
 
-  const restaurant = restaurants.find((r) => r.id === id);
-  const menu = dishes.filter((d) => d.restaurantId === id);
+  // Due query: il ristorante e i suoi piatti. Girano in parallelo.
+  const { data: restaurant, isLoading } = useRestaurant(id);
+  const { data: menu = [] } = useDishes(id);
+
+  // Mentre carica il ristorante, mostriamo uno spinner.
+  if (isLoading) {
+    return (
+      <ThemedView style={styles.screen}>
+        <SafeAreaView style={styles.center}>
+          <ActivityIndicator color={colors.accent} />
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
 
   if (!restaurant) {
     return (
