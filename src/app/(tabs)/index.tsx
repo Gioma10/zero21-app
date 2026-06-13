@@ -18,8 +18,8 @@ import { ThemedView } from "@/components/themed-view";
 import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { useThemeMode } from "@/context/theme-mode";
 import { categories } from "@/data/mock";
-import { useTheme } from "@/hooks/use-theme";
 import { useRestaurants } from "@/hooks/use-restaurants";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function HomeScreen() {
   const colors = useTheme();
@@ -27,7 +27,13 @@ export default function HomeScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [selected, setSelected] = useState("all");
-  const { data: restaurants = [], isLoading, isError, refetch, isRefetching } = useRestaurants();
+  const {
+    data: restaurants = [],
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useRestaurants();
 
   const visibleRestaurants =
     selected === "all"
@@ -55,9 +61,17 @@ export default function HomeScreen() {
                 Consegna a
               </ThemedText>
               <View style={styles.location}>
-                <SymbolView name="location.fill" size={16} tintColor={colors.accent} />
+                <SymbolView
+                  name="location.fill"
+                  size={16}
+                  tintColor={colors.accent}
+                />
                 <ThemedText type="smallBold">Arzachena, Centro</ThemedText>
-                <SymbolView name="chevron.down" size={12} tintColor={colors.textSecondary} />
+                <SymbolView
+                  name="chevron.down"
+                  size={12}
+                  tintColor={colors.textSecondary}
+                />
               </View>
             </View>
             <View style={styles.headerRight}>
@@ -80,7 +94,11 @@ export default function HomeScreen() {
           {/* RICERCA + FILTRI */}
           <View style={styles.searchRow}>
             <View style={styles.search}>
-              <SymbolView name="magnifyingglass" size={18} tintColor={colors.textSecondary} />
+              <SymbolView
+                name="magnifyingglass"
+                size={18}
+                tintColor={colors.textSecondary}
+              />
               <TextInput
                 placeholder="Cerca ristoranti o piatti..."
                 placeholderTextColor={colors.textSecondary}
@@ -88,7 +106,11 @@ export default function HomeScreen() {
               />
             </View>
             <Pressable style={styles.filterBtn}>
-              <SymbolView name="slider.horizontal.3" size={18} tintColor={colors.background} />
+              <SymbolView
+                name="slider.horizontal.3"
+                size={18}
+                tintColor={colors.background}
+              />
             </Pressable>
           </View>
 
@@ -101,7 +123,11 @@ export default function HomeScreen() {
             {categories.map((cat) => {
               const isActive = cat.id === selected;
               return (
-                <Pressable key={cat.id} onPress={() => setSelected(cat.id)} style={styles.category}>
+                <Pressable
+                  key={cat.id}
+                  onPress={() => setSelected(cat.id)}
+                  style={styles.category}
+                >
                   <View
                     style={[
                       styles.categoryIcon,
@@ -114,10 +140,15 @@ export default function HomeScreen() {
                     <SymbolView
                       name={cat.icon}
                       size={20}
-                      tintColor={isActive ? colors.background : colors.textSecondary}
+                      tintColor={
+                        isActive ? colors.background : colors.textSecondary
+                      }
                     />
                   </View>
-                  <ThemedText type="small" themeColor={isActive ? "text" : "textSecondary"}>
+                  <ThemedText
+                    type="small"
+                    themeColor={isActive ? "text" : "textSecondary"}
+                  >
                     {cat.label}
                   </ThemedText>
                 </Pressable>
@@ -125,26 +156,14 @@ export default function HomeScreen() {
             })}
           </ScrollView>
 
-          {/* BANNER PROMO */}
-          <View style={styles.banner}>
-            <View style={styles.bannerText}>
-              <ThemedText type="subtitle" style={styles.bannerTitle}>
-                50% di sconto
-              </ThemedText>
-              <ThemedText type="small" style={styles.bannerSubtitle}>
-                sul tuo primo ordine
-              </ThemedText>
-            </View>
-            <SymbolView name="gift.fill" size={48} tintColor={colors.background} />
-          </View>
-
           {/* LISTA RISTORANTI */}
           <ThemedText type="subtitle">Ristoranti</ThemedText>
           {isLoading ? (
             <ActivityIndicator color={colors.accent} style={styles.loader} />
           ) : isError ? (
             <ThemedText type="small" themeColor="textSecondary">
-              Impossibile caricare i ristoranti. Controlla la connessione e riprova.
+              Impossibile caricare i ristoranti. Controlla la connessione e
+              riprova.
             </ThemedText>
           ) : (
             <View style={styles.list}>
