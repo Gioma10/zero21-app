@@ -6,6 +6,16 @@ import type { Order, OrderStatus } from "@/types";
 
 const colors = Colors.dark;
 
+// Formatta il timestamp ISO del DB in "13/06 · 20:45" (senza dipendere da Intl).
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm} · ${hh}:${min}`;
+}
+
 function statusColor(status: OrderStatus) {
   switch (status) {
     case "Consegnato":
@@ -24,7 +34,7 @@ export function OrderCard({ order }: { order: Order }) {
   return (
     <View style={styles.card}>
       <View style={styles.row}>
-        <ThemedText type="smallBold">Ordine #{order.id}</ThemedText>
+        <ThemedText type="smallBold">Ordine #{order.id.slice(0, 8)}</ThemedText>
         <View style={[styles.badge, { borderColor: color }]}>
           <View style={[styles.dot, { backgroundColor: color }]} />
           <ThemedText type="small" style={{ color }}>
@@ -34,7 +44,7 @@ export function OrderCard({ order }: { order: Order }) {
       </View>
 
       <ThemedText type="small" themeColor="textSecondary">
-        {order.date}
+        {formatDate(order.createdAt)}
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
         {summary}

@@ -8,6 +8,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors, Radii, Spacing } from "@/constants/theme";
 import { useCart } from "@/context/cart";
+import { useCreateOrder } from "@/hooks/use-orders";
 
 const colors = Colors.dark;
 
@@ -17,18 +18,37 @@ const SERVICE_FEE = 2.0;
 
 export default function CartScreen() {
   const cart = useCart();
+  const createOrder = useCreateOrder();
   const total = cart.subtotal + DELIVERY_FEE + SERVICE_FEE;
 
   function checkout() {
-    Alert.alert("Ordine confermato 🎉", "Grazie! Il tuo ordine è in preparazione.", [
+    createOrder.mutate(
       {
-        text: "OK",
-        onPress: () => {
-          cart.clear();
-          router.back();
+        // "scatto" dei piatti nel carrello: nome, quantità e prezzo attuali
+        items: cart.items.map((i) => ({
+          name: i.dish.name,
+          qty: i.qty,
+          price: i.dish.price,
+        })),
+        total,
+      },
+      {
+        onSuccess: () => {
+          Alert.alert("Ordine confermato 🎉", "Grazie! Il tuo ordine è in preparazione.", [
+            {
+              text: "OK",
+              onPress: () => {
+                cart.clear();
+                router.back();
+              },
+            },
+          ]);
+        },
+        onError: () => {
+          Alert.alert("Errore", "Non è stato possibile inviare l'ordine. Riprova.");
         },
       },
-    ]);
+    );
   }
 
   return (
@@ -127,9 +147,13 @@ export default function CartScreen() {
 
             {/* CHECKOUT */}
             <SafeAreaView edges={["bottom"]} style={styles.footer}>
-              <Pressable style={styles.checkout} onPress={checkout}>
+              <Pressable
+                style={[styles.checkout, createOrder.isPending && styles.checkoutDisabled]}
+                onPress={checkout}
+                disabled={createOrder.isPending}
+              >
                 <ThemedText type="default" style={styles.checkoutText}>
-                  Procedi al pagamento
+                  {createOrder.isPending ? "Invio in corso..." : "Procedi al pagamento"}
                 </ThemedText>
               </Pressable>
             </SafeAreaView>
@@ -256,6 +280,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.accent,
+  },
+  checkoutDisabled: {
+    opacity: 0.6,
   },
   checkoutText: {
     color: colors.background,

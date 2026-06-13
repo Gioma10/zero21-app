@@ -41,10 +41,17 @@ export type CartItem = {
 // Stati possibili di un ordine (union type = guardrail)
 export type OrderStatus = "In preparazione" | "In consegna" | "Consegnato" | "Annullato";
 
+// Una riga dell'ordine: "scatto" del piatto al momento dell'acquisto
+export type OrderItem = {
+  name: string;
+  qty: number;
+  price: number; // prezzo unitario quando è stato ordinato
+};
+
 export type Order = {
   id: string;
-  date: string;
+  createdAt: string; // timestamp ISO dal database
   status: OrderStatus;
-  items: { name: string; qty: number }[];
+  items: OrderItem[];
   total: number; // euro
 };

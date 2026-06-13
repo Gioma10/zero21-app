@@ -1,4 +1,4 @@
-import type { Category, Dish, Order, Restaurant } from "@/types";
+import type { Category, Dish, Restaurant } from "@/types";
 
 // Le chip in cima alla Home: filtrano i ristoranti per "tag"/cucina.
 export const categories: Category[] = [
@@ -153,35 +153,5 @@ export const dishes: Dish[] = [
     price: 6,
     image: "https://picsum.photos/seed/zero21-d12/400/300",
     section: "Dolci",
-  },
-];
-
-export const orders: Order[] = [
-  {
-    id: "1042",
-    date: "Oggi · 20:45",
-    status: "In consegna",
-    items: [
-      { name: "Fregola ai Frutti di Mare", qty: 1 },
-      { name: "Vermentino di Gallura", qty: 2 },
-    ],
-    total: 30,
-  },
-  {
-    id: "1039",
-    date: "10 giu · 13:20",
-    status: "Consegnato",
-    items: [
-      { name: "Catalana di Aragosta", qty: 1 },
-      { name: "Seadas al Miele", qty: 2 },
-    ],
-    total: 48,
-  },
-  {
-    id: "1031",
-    date: "5 giu · 21:10",
-    status: "Annullato",
-    items: [{ name: "Carpaccio di Gamberi", qty: 2 }],
-    total: 32,
   },
 ];
