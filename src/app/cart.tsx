@@ -33,16 +33,11 @@ export default function CartScreen() {
         total,
       },
       {
-        onSuccess: () => {
-          Alert.alert("Ordine confermato 🎉", "Grazie! Il tuo ordine è in preparazione.", [
-            {
-              text: "OK",
-              onPress: () => {
-                cart.clear();
-                router.back();
-              },
-            },
-          ]);
+        onSuccess: (order) => {
+          cart.clear();
+          // Sostituisco il carrello con la pagina di conferma (replace = niente
+          // "indietro" verso un carrello ormai vuoto). Passo l'id dell'ordine.
+          router.replace({ pathname: "/order-success", params: { id: order.id } });
         },
         onError: () => {
           Alert.alert("Errore", "Non è stato possibile inviare l'ordine. Riprova.");

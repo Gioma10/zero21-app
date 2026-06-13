@@ -23,6 +23,10 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="restaurant/[id]" />
             <Stack.Screen name="cart" options={{ presentation: "modal" }} />
+            <Stack.Screen
+              name="order-success"
+              options={{ presentation: "modal", gestureEnabled: false }}
+            />
           </Stack>
         </CartProvider>
       </ThemeProvider>

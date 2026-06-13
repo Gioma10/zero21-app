@@ -20,6 +20,26 @@ export function useOrders() {
   return useQuery({ queryKey: ["orders"], queryFn: fetchOrders });
 }
 
+// Un singolo ordine per id (lo usa la pagina di conferma).
+async function fetchOrder(id: string): Promise<Order | null> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as Order | null;
+}
+
+export function useOrder(id: string) {
+  return useQuery({
+    queryKey: ["order", id],
+    queryFn: () => fetchOrder(id),
+    enabled: !!id,
+  });
+}
+
 // --- SCRITTURA: crea un nuovo ordine ---
 type NewOrder = { items: OrderItem[]; total: number };
 
@@ -40,9 +60,11 @@ export function useCreateOrder() {
 
   return useMutation({
     mutationFn: createOrder,
-    onSuccess: () => {
-      // L'ordine è stato creato → la lista "orders" in cache è ora obsoleta.
-      // invalidate la marca come "da rifare" e TanStack la ricarica da sola.
+    onSuccess: (order) => {
+      // Metto subito l'ordine creato nella cache: la pagina di conferma lo
+      // legge all'istante con useOrder, senza una seconda chiamata al server.
+      queryClient.setQueryData(["order", order.id], order);
+      // La lista "orders" è ora obsoleta → la marco da rifare: TanStack la ricarica.
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
