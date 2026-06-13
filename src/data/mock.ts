@@ -1,26 +1,52 @@
-import type { Category, Dish, Restaurant } from "@/types";
+import type { Category, Dish, Order, Restaurant } from "@/types";
 
-export const restaurant: Restaurant = {
-  name: "Zero21",
-  location: "Arzachena, Centro",
-  coverImage: "https://picsum.photos/seed/zero21-cover/800/400",
-  rating: 4.8,
-  avgTime: 25,
-  deliveryFee: 2.5,
-};
-
+// Le chip in cima alla Home: filtrano i ristoranti per "tag"/cucina.
 export const categories: Category[] = [
   { id: "all", label: "Tutti", icon: "square.grid.2x2.fill" },
-  { id: "Antipasti", label: "Antipasti", icon: "leaf.fill" },
-  { id: "Primi", label: "Primi", icon: "fork.knife" },
-  { id: "Secondi", label: "Secondi", icon: "flame.fill" },
-  { id: "Dolci", label: "Dolci", icon: "birthday.cake.fill" },
-  { id: "Drink", label: "Drink", icon: "wineglass.fill" },
+  { id: "Pizza", label: "Pizza", icon: "flame.fill" },
+  { id: "Sushi", label: "Sushi", icon: "fish.fill" },
+  { id: "Pesce", label: "Pesce", icon: "leaf.fill" },
+  { id: "Gourmet", label: "Gourmet", icon: "star.fill" },
+];
+
+export const restaurants: Restaurant[] = [
+  {
+    id: "r1",
+    name: "Zero21",
+    coverImage: "https://picsum.photos/seed/zero21-r1/800/500",
+    tags: ["Gourmet", "Pesce"],
+    rating: 4.8,
+    minOrder: 20,
+    deliveryTime: "30-40 min",
+    deliveryFee: 2.5,
+  },
+  {
+    id: "r2",
+    name: "Porto Cervo Pizza",
+    coverImage: "https://picsum.photos/seed/zero21-r2/800/500",
+    tags: ["Pizza"],
+    rating: 4.6,
+    minOrder: 15,
+    deliveryTime: "25-35 min",
+    deliveryFee: 1.5,
+  },
+  {
+    id: "r3",
+    name: "Sushi Smeralda",
+    coverImage: "https://picsum.photos/seed/zero21-r3/800/500",
+    tags: ["Sushi", "Pesce"],
+    rating: 4.7,
+    minOrder: 18,
+    deliveryTime: "20-30 min",
+    deliveryFee: 0,
+  },
 ];
 
 export const dishes: Dish[] = [
+  // --- Zero21 (r1) ---
   {
     id: "d1",
+    restaurantId: "r1",
     name: "Carpaccio di Gamberi",
     description: "Gamberi rossi crudi, lime e olio del Mirto",
     price: 16,
@@ -29,6 +55,7 @@ export const dishes: Dish[] = [
   },
   {
     id: "d2",
+    restaurantId: "r1",
     name: "Fregola ai Frutti di Mare",
     description: "Fregola sarda con vongole, cozze e gamberi",
     price: 18,
@@ -37,6 +64,7 @@ export const dishes: Dish[] = [
   },
   {
     id: "d3",
+    restaurantId: "r1",
     name: "Catalana di Aragosta",
     description: "Aragosta con pomodoro e cipolla rossa",
     price: 32,
@@ -45,18 +73,115 @@ export const dishes: Dish[] = [
   },
   {
     id: "d4",
+    restaurantId: "r1",
     name: "Seadas al Miele",
     description: "Dolce sardo fritto con miele di corbezzolo",
     price: 8,
     image: "https://picsum.photos/seed/zero21-d4/400/300",
     section: "Dolci",
   },
+  // --- Porto Cervo Pizza (r2) ---
   {
     id: "d5",
-    name: "Vermentino di Gallura",
-    description: "Calice di vino bianco DOCG",
-    price: 6,
+    restaurantId: "r2",
+    name: "Bruschette miste",
+    description: "Pane casereccio con pomodoro, olive e mirto",
+    price: 7,
     image: "https://picsum.photos/seed/zero21-d5/400/300",
-    section: "Drink",
+    section: "Antipasti",
+  },
+  {
+    id: "d6",
+    restaurantId: "r2",
+    name: "Pizza Margherita",
+    description: "Pomodoro San Marzano, fiordilatte, basilico",
+    price: 9,
+    image: "https://picsum.photos/seed/zero21-d6/400/300",
+    section: "Primi",
+  },
+  {
+    id: "d7",
+    restaurantId: "r2",
+    name: "Pizza Diavola",
+    description: "Pomodoro, fiordilatte e salame piccante",
+    price: 11,
+    image: "https://picsum.photos/seed/zero21-d7/400/300",
+    section: "Primi",
+  },
+  {
+    id: "d8",
+    restaurantId: "r2",
+    name: "Tiramisù",
+    description: "Classico con savoiardi e mascarpone",
+    price: 6,
+    image: "https://picsum.photos/seed/zero21-d8/400/300",
+    section: "Dolci",
+  },
+  // --- Sushi Smeralda (r3) ---
+  {
+    id: "d9",
+    restaurantId: "r3",
+    name: "Edamame",
+    description: "Fave di soia al vapore con sale marino",
+    price: 5,
+    image: "https://picsum.photos/seed/zero21-d9/400/300",
+    section: "Antipasti",
+  },
+  {
+    id: "d10",
+    restaurantId: "r3",
+    name: "Uramaki Salmone",
+    description: "8 pezzi con avocado e salmone scottato",
+    price: 12,
+    image: "https://picsum.photos/seed/zero21-d10/400/300",
+    section: "Primi",
+  },
+  {
+    id: "d11",
+    restaurantId: "r3",
+    name: "Sashimi Misto",
+    description: "Selezione di pesce crudo del giorno",
+    price: 22,
+    image: "https://picsum.photos/seed/zero21-d11/400/300",
+    section: "Secondi",
+  },
+  {
+    id: "d12",
+    restaurantId: "r3",
+    name: "Mochi",
+    description: "Dolce giapponese di riso, gusto matcha",
+    price: 6,
+    image: "https://picsum.photos/seed/zero21-d12/400/300",
+    section: "Dolci",
+  },
+];
+
+export const orders: Order[] = [
+  {
+    id: "1042",
+    date: "Oggi · 20:45",
+    status: "In consegna",
+    items: [
+      { name: "Fregola ai Frutti di Mare", qty: 1 },
+      { name: "Vermentino di Gallura", qty: 2 },
+    ],
+    total: 30,
+  },
+  {
+    id: "1039",
+    date: "10 giu · 13:20",
+    status: "Consegnato",
+    items: [
+      { name: "Catalana di Aragosta", qty: 1 },
+      { name: "Seadas al Miele", qty: 2 },
+    ],
+    total: 48,
+  },
+  {
+    id: "1031",
+    date: "5 giu · 21:10",
+    status: "Annullato",
+    items: [{ name: "Carpaccio di Gamberi", qty: 2 }],
+    total: 32,
   },
 ];
