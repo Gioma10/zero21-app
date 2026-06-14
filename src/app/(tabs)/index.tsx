@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
 import { useMemo, useState } from "react";
@@ -10,12 +11,14 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { PressableScale } from "@/components/pressable-scale";
 import { RestaurantCard } from "@/components/restaurant-card";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Radii, Spacing, type Palette } from "@/constants/theme";
+import { Radii, Shadows, Spacing, type Palette } from "@/constants/theme";
 import { useThemeMode } from "@/context/theme-mode";
 import { categories } from "@/data/mock";
 import { useRestaurants } from "@/hooks/use-restaurants";
@@ -24,6 +27,8 @@ import { useTheme } from "@/hooks/use-theme";
 export default function HomeScreen() {
   const colors = useTheme();
   const { mode, toggle } = useThemeMode();
+  const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [selected, setSelected] = useState("all");
@@ -42,138 +47,151 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.screen}>
-      <SafeAreaView edges={["top"]} style={styles.safe}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
-              tintColor={colors.accent}
-            />
-          }
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: Spacing.six }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={colors.accent}
+            progressViewOffset={insets.top + 80}
+          />
+        }
+      >
+        {/* HERO a gradiente smeraldo — la firma di zero21 */}
+        <Animated.View
+          entering={reduceMotion ? undefined : FadeIn.duration(500)}
+          style={[styles.heroWrap, { paddingTop: insets.top + Spacing.three }]}
         >
-          {/* HEADER */}
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Consegna a
-              </ThemedText>
-              <View style={styles.location}>
-                <SymbolView
-                  name="location.fill"
-                  size={16}
-                  tintColor={colors.accent}
-                />
-                <ThemedText type="smallBold">Arzachena, Centro</ThemedText>
-                <SymbolView
-                  name="chevron.down"
-                  size={12}
-                  tintColor={colors.textSecondary}
+          <LinearGradient
+            colors={[colors.accentBright, colors.accent]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.hero}
+          >
+            <View style={styles.heroTop}>
+              <Pressable style={styles.location} hitSlop={8}>
+                <ThemedText type="smallBold" style={styles.locationKicker}>
+                  Consegna a
+                </ThemedText>
+                <View style={styles.locationRow}>
+                  <SymbolView name="location.fill" size={15} tintColor="#FFFFFF" />
+                  <ThemedText type="smallBold" style={styles.locationName}>
+                    Arzachena, Centro
+                  </ThemedText>
+                  <SymbolView name="chevron.down" size={11} tintColor="rgba(255,255,255,0.8)" />
+                </View>
+              </Pressable>
+              <View style={styles.heroActions}>
+                <Pressable style={styles.glassBtn} onPress={toggle} hitSlop={8}>
+                  <SymbolView
+                    name={mode === "dark" ? "sun.max.fill" : "moon.fill"}
+                    size={18}
+                    tintColor="#FFFFFF"
+                  />
+                </Pressable>
+                <Image
+                  source="https://picsum.photos/seed/zero21-avatar/100/100"
+                  style={styles.avatar}
+                  contentFit="cover"
                 />
               </View>
             </View>
-            <View style={styles.headerRight}>
-              {/* Interruttore tema: sole se sei in dark (→ passa a light), luna se light */}
-              <Pressable style={styles.iconBtn} onPress={toggle} hitSlop={8}>
-                <SymbolView
-                  name={mode === "dark" ? "sun.max.fill" : "moon.fill"}
-                  size={20}
-                  tintColor={colors.accent}
-                />
-              </Pressable>
-              <Image
-                source="https://picsum.photos/seed/zero21-avatar/100/100"
-                style={styles.avatar}
-                contentFit="cover"
-              />
-            </View>
-          </View>
 
-          {/* RICERCA + FILTRI */}
+            <ThemedText type="display" style={styles.heroTitle}>
+              Il mare{"\n"}in tavola.
+            </ThemedText>
+          </LinearGradient>
+
+          {/* Barra ricerca flottante che scavalca il bordo dell'hero */}
           <View style={styles.searchRow}>
             <View style={styles.search}>
-              <SymbolView
-                name="magnifyingglass"
-                size={18}
-                tintColor={colors.textSecondary}
-              />
+              <SymbolView name="magnifyingglass" size={18} tintColor={colors.textSecondary} />
               <TextInput
-                placeholder="Cerca ristoranti o piatti..."
+                placeholder="Cerca ristoranti o piatti…"
                 placeholderTextColor={colors.textSecondary}
                 style={styles.searchInput}
               />
             </View>
-            <Pressable style={styles.filterBtn}>
-              <SymbolView
-                name="slider.horizontal.3"
-                size={18}
-                tintColor={colors.background}
-              />
-            </Pressable>
+            <PressableScale style={styles.filterBtn} scaleTo={0.9}>
+              <SymbolView name="slider.horizontal.3" size={18} tintColor={colors.onAccent} />
+            </PressableScale>
           </View>
+        </Animated.View>
 
-          {/* CATEGORIE */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categories}
-          >
-            {categories.map((cat) => {
-              const isActive = cat.id === selected;
-              return (
-                <Pressable
-                  key={cat.id}
-                  onPress={() => setSelected(cat.id)}
-                  style={styles.category}
+        {/* CATEGORIE a pill */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categories}
+        >
+          {categories.map((cat) => {
+            const isActive = cat.id === selected;
+            return (
+              <PressableScale
+                key={cat.id}
+                onPress={() => setSelected(cat.id)}
+                scaleTo={0.94}
+                style={[
+                  styles.chip,
+                  {
+                    backgroundColor: isActive ? colors.accent : colors.card,
+                    borderColor: isActive ? colors.accent : colors.border,
+                  },
+                ]}
+              >
+                <SymbolView
+                  name={cat.icon}
+                  size={15}
+                  tintColor={isActive ? colors.onAccent : colors.accent}
+                />
+                <ThemedText
+                  type="smallBold"
+                  style={{ color: isActive ? colors.onAccent : colors.text }}
                 >
-                  <View
-                    style={[
-                      styles.categoryIcon,
-                      {
-                        backgroundColor: isActive ? colors.accent : colors.card,
-                        borderColor: isActive ? colors.accent : colors.border,
-                      },
-                    ]}
-                  >
-                    <SymbolView
-                      name={cat.icon}
-                      size={20}
-                      tintColor={
-                        isActive ? colors.background : colors.textSecondary
-                      }
-                    />
-                  </View>
-                  <ThemedText
-                    type="small"
-                    themeColor={isActive ? "text" : "textSecondary"}
-                  >
-                    {cat.label}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-
-          {/* LISTA RISTORANTI */}
-          <ThemedText type="subtitle">Ristoranti</ThemedText>
-          {isLoading ? (
-            <ActivityIndicator color={colors.accent} style={styles.loader} />
-          ) : isError ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              Impossibile caricare i ristoranti. Controlla la connessione e
-              riprova.
-            </ThemedText>
-          ) : (
-            <View style={styles.list}>
-              {visibleRestaurants.map((r) => (
-                <RestaurantCard key={r.id} restaurant={r} />
-              ))}
-            </View>
-          )}
+                  {cat.label}
+                </ThemedText>
+              </PressableScale>
+            );
+          })}
         </ScrollView>
-      </SafeAreaView>
+
+        {/* LISTA RISTORANTI */}
+        <View style={styles.listHeader}>
+          <ThemedText type="serif">Ristoranti</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {visibleRestaurants.length} aperti ora
+          </ThemedText>
+        </View>
+
+        {isLoading ? (
+          <ActivityIndicator color={colors.accent} style={styles.loader} />
+        ) : isError ? (
+          <View style={styles.errorBox}>
+            <SymbolView name="wifi.exclamationmark" size={28} tintColor={colors.accentTertiary} />
+            <ThemedText type="smallBold" style={styles.errorTitle}>
+              Niente connessione
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.errorText}>
+              Non riusciamo a caricare i ristoranti. Controlla la rete e tira giù per riprovare.
+            </ThemedText>
+          </View>
+        ) : (
+          <View style={styles.list}>
+            {visibleRestaurants.map((r, i) => (
+              <Animated.View
+                key={r.id}
+                entering={
+                  reduceMotion ? undefined : FadeInDown.duration(420).delay(i * 90)
+                }
+              >
+                <RestaurantCard restaurant={r} />
+              </Animated.View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -181,49 +199,73 @@ export default function HomeScreen() {
 const createStyles = (colors: Palette) =>
   StyleSheet.create({
     screen: { flex: 1 },
-    safe: { flex: 1 },
     content: {
-      paddingHorizontal: Spacing.three,
-      paddingBottom: Spacing.six,
       gap: Spacing.four,
     },
-    header: {
+    heroWrap: {
+      paddingHorizontal: Spacing.three,
+      // spazio per la search bar flottante che sporge sotto l'hero
+      marginBottom: 28,
+    },
+    hero: {
+      borderRadius: Radii.xl,
+      paddingHorizontal: Spacing.four,
+      paddingTop: Spacing.four,
+      paddingBottom: Spacing.six,
+      ...Shadows.soft,
+    },
+    heroTop: {
       flexDirection: "row",
       justifyContent: "space-between",
-      alignItems: "center",
-      paddingTop: Spacing.two,
-    },
-    headerLeft: {
-      gap: Spacing.half,
+      alignItems: "flex-start",
     },
     location: {
+      gap: 2,
+    },
+    locationKicker: {
+      color: "rgba(255,255,255,0.85)",
+      fontSize: 12,
+    },
+    locationRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: Spacing.one,
     },
-    headerRight: {
+    locationName: {
+      color: "#FFFFFF",
+      fontSize: 16,
+    },
+    heroActions: {
       flexDirection: "row",
       alignItems: "center",
       gap: Spacing.two,
     },
-    iconBtn: {
-      width: 44,
-      height: 44,
+    glassBtn: {
+      width: 42,
+      height: 42,
       borderRadius: Radii.pill,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: colors.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
+      backgroundColor: "rgba(255,255,255,0.18)",
     },
     avatar: {
-      width: 44,
-      height: 44,
+      width: 42,
+      height: 42,
       borderRadius: Radii.pill,
-      borderWidth: 1,
-      borderColor: colors.accent,
+      borderWidth: 2,
+      borderColor: "rgba(255,255,255,0.6)",
+    },
+    heroTitle: {
+      color: "#FFFFFF",
+      marginTop: Spacing.four,
+      fontSize: 40,
+      lineHeight: 42,
     },
     searchRow: {
+      position: "absolute",
+      left: Spacing.four + Spacing.two,
+      right: Spacing.four + Spacing.two,
+      bottom: -26,
       flexDirection: "row",
       gap: Spacing.two,
     },
@@ -232,12 +274,13 @@ const createStyles = (colors: Palette) =>
       flexDirection: "row",
       alignItems: "center",
       gap: Spacing.two,
-      height: 48,
+      height: 52,
       paddingHorizontal: Spacing.three,
       borderRadius: Radii.card,
       backgroundColor: colors.card,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
+      ...Shadows.lifted,
     },
     searchInput: {
       flex: 1,
@@ -245,52 +288,55 @@ const createStyles = (colors: Palette) =>
       fontSize: 16,
     },
     filterBtn: {
-      width: 48,
-      height: 48,
+      width: 52,
+      height: 52,
       borderRadius: Radii.card,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: colors.accent,
+      ...Shadows.lifted,
     },
     categories: {
-      gap: Spacing.three,
-      paddingVertical: Spacing.half,
+      gap: Spacing.two,
+      paddingHorizontal: Spacing.three,
     },
-    category: {
-      alignItems: "center",
-      gap: Spacing.one,
-      width: 64,
-    },
-    categoryIcon: {
-      width: 56,
-      height: 56,
-      borderRadius: Radii.card,
-      alignItems: "center",
-      justifyContent: "center",
-      borderWidth: 1,
-    },
-    banner: {
+    chip: {
       flexDirection: "row",
       alignItems: "center",
+      gap: Spacing.one + 2,
+      paddingHorizontal: Spacing.three,
+      paddingVertical: Spacing.two,
+      borderRadius: Radii.pill,
+      borderWidth: 1,
+    },
+    listHeader: {
+      flexDirection: "row",
+      alignItems: "baseline",
       justifyContent: "space-between",
-      padding: Spacing.four,
-      borderRadius: Radii.card,
-      backgroundColor: colors.accent,
-    },
-    bannerText: {
-      gap: Spacing.half,
-    },
-    bannerTitle: {
-      color: colors.background,
-    },
-    bannerSubtitle: {
-      color: colors.background,
-      opacity: 0.8,
+      paddingHorizontal: Spacing.three,
     },
     list: {
-      gap: Spacing.three,
+      gap: Spacing.four,
+      paddingHorizontal: Spacing.three,
     },
     loader: {
       marginTop: Spacing.four,
+    },
+    errorBox: {
+      alignItems: "center",
+      gap: Spacing.one,
+      marginHorizontal: Spacing.three,
+      padding: Spacing.four,
+      borderRadius: Radii.lg,
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    errorTitle: {
+      marginTop: Spacing.one,
+      fontSize: 16,
+    },
+    errorText: {
+      textAlign: "center",
     },
   });

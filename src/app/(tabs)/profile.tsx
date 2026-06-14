@@ -1,11 +1,13 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { SFSymbol, SymbolView } from "expo-symbols";
 import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { PressableScale } from "@/components/pressable-scale";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Radii, Spacing, type Palette } from "@/constants/theme";
+import { Radii, Shadows, Spacing, type Palette } from "@/constants/theme";
 import { useAuth } from "@/context/auth";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -22,7 +24,8 @@ export default function ProfileScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const email = user?.email ?? "";
-  const displayName = (user?.user_metadata?.display_name as string) || email.split("@")[0] || "Utente";
+  const displayName =
+    (user?.user_metadata?.display_name as string) || email.split("@")[0] || "Utente";
   const phone = (user?.user_metadata?.phone as string) || "";
   const initial = displayName.charAt(0).toUpperCase() || "?";
 
@@ -32,11 +35,16 @@ export default function ProfileScreen() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Intestazione utente */}
           <View style={styles.userRow}>
-            <View style={styles.avatar}>
+            <LinearGradient
+              colors={[colors.accentBright, colors.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatar}
+            >
               <ThemedText style={styles.avatarText}>{initial}</ThemedText>
-            </View>
+            </LinearGradient>
             <View style={styles.userInfo}>
-              <ThemedText type="subtitle" numberOfLines={1}>
+              <ThemedText type="serif" numberOfLines={1} style={styles.userName}>
                 {displayName}
               </ThemedText>
               <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
@@ -52,9 +60,14 @@ export default function ProfileScreen() {
 
           {/* Voci di menu */}
           <View style={styles.menu}>
-            {menuItems.map((item) => (
-              <Pressable key={item.label} style={styles.row}>
-                <SymbolView name={item.icon} size={20} tintColor={colors.accent} />
+            {menuItems.map((item, i) => (
+              <Pressable
+                key={item.label}
+                style={[styles.row, i === menuItems.length - 1 && styles.rowLast]}
+              >
+                <View style={styles.rowIcon}>
+                  <SymbolView name={item.icon} size={18} tintColor={colors.accent} />
+                </View>
                 <ThemedText type="default" style={styles.rowLabel}>
                   {item.label}
                 </ThemedText>
@@ -64,16 +77,16 @@ export default function ProfileScreen() {
           </View>
 
           {/* Logout */}
-          <Pressable style={styles.logout} onPress={signOut}>
+          <PressableScale style={styles.logout} onPress={signOut} scaleTo={0.98}>
             <SymbolView
               name="rectangle.portrait.and.arrow.right.fill"
-              size={20}
-              tintColor="#E5654B"
+              size={18}
+              tintColor={colors.accentTertiary}
             />
-            <ThemedText type="default" style={styles.logoutText}>
+            <ThemedText type="smallBold" style={styles.logoutText}>
               Esci
             </ThemedText>
-          </Pressable>
+          </PressableScale>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -86,7 +99,7 @@ const createStyles = (colors: Palette) =>
     safe: { flex: 1 },
     content: {
       paddingHorizontal: Spacing.three,
-      paddingTop: Spacing.three,
+      paddingTop: Spacing.four,
       paddingBottom: Spacing.six,
       gap: Spacing.four,
     },
@@ -96,26 +109,27 @@ const createStyles = (colors: Palette) =>
       gap: Spacing.three,
     },
     avatar: {
-      width: 72,
-      height: 72,
+      width: 76,
+      height: 76,
       borderRadius: Radii.pill,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: colors.backgroundSelected,
-      borderWidth: 1,
-      borderColor: colors.accent,
+      ...Shadows.soft,
     },
     avatarText: {
-      fontSize: 28,
+      fontSize: 30,
       fontWeight: "700",
-      color: colors.accent,
+      color: colors.onAccent,
     },
     userInfo: {
       flex: 1,
-      gap: Spacing.half,
+      gap: 2,
+    },
+    userName: {
+      fontSize: 24,
     },
     menu: {
-      borderRadius: Radii.card,
+      borderRadius: Radii.lg,
       backgroundColor: colors.card,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
@@ -130,6 +144,17 @@ const createStyles = (colors: Palette) =>
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,
     },
+    rowLast: {
+      borderBottomWidth: 0,
+    },
+    rowIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: Radii.md,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.backgroundSelected,
+    },
     rowLabel: {
       flex: 1,
     },
@@ -140,11 +165,11 @@ const createStyles = (colors: Palette) =>
       gap: Spacing.two,
       paddingVertical: Spacing.three,
       borderRadius: Radii.card,
-      borderWidth: 1,
-      borderColor: "#E5654B55",
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
     },
     logoutText: {
-      color: "#E5654B",
-      fontWeight: "700",
+      color: colors.accentTertiary,
     },
   });

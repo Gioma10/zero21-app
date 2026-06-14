@@ -4,7 +4,18 @@ import { Fonts, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedTextProps = TextProps & {
-  type?: 'default' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'linkPrimary' | 'code';
+  type?:
+    | 'default'
+    | 'title'
+    | 'display' // wordmark / hero, serif elegante (New York su iOS)
+    | 'serif' // titolo editoriale serif, scala media
+    | 'small'
+    | 'smallBold'
+    | 'subtitle'
+    | 'eyebrow' // micro-etichetta usata con parsimonia (es. sezioni menù)
+    | 'link'
+    | 'linkPrimary'
+    | 'code';
   themeColor?: ThemeColor;
 };
 
@@ -17,9 +28,12 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         { color: theme[themeColor ?? 'text'] },
         type === 'default' && styles.default,
         type === 'title' && styles.title,
+        type === 'display' && styles.display,
+        type === 'serif' && styles.serif,
         type === 'small' && styles.small,
         type === 'smallBold' && styles.smallBold,
         type === 'subtitle' && styles.subtitle,
+        type === 'eyebrow' && styles.eyebrow,
         type === 'link' && styles.link,
         type === 'linkPrimary' && styles.linkPrimary,
         type === 'code' && styles.code,
@@ -51,10 +65,31 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     lineHeight: 52,
   },
+  display: {
+    fontFamily: Fonts.serif,
+    fontSize: 44,
+    lineHeight: 46,
+    fontWeight: '600',
+    letterSpacing: -0.5,
+  },
+  serif: {
+    fontFamily: Fonts.serif,
+    fontSize: 26,
+    lineHeight: 32,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+  },
   subtitle: {
     fontSize: 32,
     lineHeight: 44,
     fontWeight: 600,
+  },
+  eyebrow: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
   link: {
     lineHeight: 30,

@@ -4,21 +4,25 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from "react-native";
+import Animated, { FadeIn, FadeOut, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { PressableScale } from "@/components/pressable-scale";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Radii, Spacing, type Palette } from "@/constants/theme";
+import { Radii, Shadows, Spacing, type Palette } from "@/constants/theme";
 import { useAuth } from "@/context/auth";
 import { useTheme } from "@/hooks/use-theme";
 
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
   const colors = useTheme();
+  const reduceMotion = useReducedMotion();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -54,6 +58,13 @@ export default function LoginScreen() {
     }
   }
 
+  function switchMode(next: "signin" | "signup") {
+    setMessage(null);
+    setMode(next);
+  }
+
+  const extra = reduceMotion ? {} : { entering: FadeIn.duration(220), exiting: FadeOut.duration(120) };
+
   return (
     <ThemedView style={styles.screen}>
       <SafeAreaView style={styles.safe}>
@@ -61,25 +72,55 @@ export default function LoginScreen() {
           style={styles.kav}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <View style={styles.content}>
-            <ThemedText type="title" style={styles.brand}>
-              zero21
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
-              {isSignup ? "Crea il tuo account" : "Bentornato, accedi per ordinare"}
-            </ThemedText>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Wordmark + tagline */}
+            <View style={styles.brandBlock}>
+              <ThemedText type="display" themeColor="accent" style={styles.brand}>
+                zero21
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
+                Il meglio della Costa Smeralda, a casa tua.
+              </ThemedText>
+            </View>
+
+            {/* Segmented control Accedi / Registrati */}
+            <View style={styles.segment}>
+              {(["signin", "signup"] as const).map((m) => {
+                const active = mode === m;
+                return (
+                  <Pressable
+                    key={m}
+                    style={[styles.segmentItem, active && styles.segmentItemActive]}
+                    onPress={() => switchMode(m)}
+                  >
+                    <ThemedText
+                      type="smallBold"
+                      style={{ color: active ? colors.onAccent : colors.textSecondary }}
+                    >
+                      {m === "signin" ? "Accedi" : "Registrati"}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
 
             <View style={styles.form}>
               {isSignup && (
-                <TextInput
-                  placeholder="Nome"
-                  placeholderTextColor={colors.textSecondary}
-                  style={styles.input}
-                  autoCapitalize="words"
-                  autoComplete="name"
-                  value={name}
-                  onChangeText={setName}
-                />
+                <Animated.View {...extra}>
+                  <TextInput
+                    placeholder="Nome"
+                    placeholderTextColor={colors.textSecondary}
+                    style={styles.input}
+                    autoCapitalize="words"
+                    autoComplete="name"
+                    value={name}
+                    onChangeText={setName}
+                  />
+                </Animated.View>
               )}
               <TextInput
                 placeholder="Email"
@@ -92,15 +133,17 @@ export default function LoginScreen() {
                 onChangeText={setEmail}
               />
               {isSignup && (
-                <TextInput
-                  placeholder="Telefono"
-                  placeholderTextColor={colors.textSecondary}
-                  style={styles.input}
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                  value={phone}
-                  onChangeText={setPhone}
-                />
+                <Animated.View {...extra}>
+                  <TextInput
+                    placeholder="Telefono"
+                    placeholderTextColor={colors.textSecondary}
+                    style={styles.input}
+                    keyboardType="phone-pad"
+                    autoComplete="tel"
+                    value={phone}
+                    onChangeText={setPhone}
+                  />
+                </Animated.View>
               )}
               <TextInput
                 placeholder="Password"
@@ -111,48 +154,42 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
               />
               {isSignup && (
-                <TextInput
-                  placeholder="Conferma password"
-                  placeholderTextColor={colors.textSecondary}
-                  style={styles.input}
-                  secureTextEntry
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                />
+                <Animated.View {...extra}>
+                  <TextInput
+                    placeholder="Conferma password"
+                    placeholderTextColor={colors.textSecondary}
+                    style={styles.input}
+                    secureTextEntry
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                  />
+                </Animated.View>
               )}
 
               {message && (
-                <ThemedText type="small" style={styles.message}>
-                  {message}
-                </ThemedText>
+                <Animated.View {...(reduceMotion ? {} : { entering: FadeIn.duration(200) })}>
+                  <ThemedText type="smallBold" style={styles.message}>
+                    {message}
+                  </ThemedText>
+                </Animated.View>
               )}
 
-              <Pressable
+              <PressableScale
                 style={[styles.button, loading && styles.buttonDisabled]}
                 onPress={submit}
                 disabled={loading}
+                scaleTo={0.97}
               >
                 {loading ? (
-                  <ActivityIndicator color={colors.background} />
+                  <ActivityIndicator color={colors.onAccent} />
                 ) : (
                   <ThemedText type="default" style={styles.buttonText}>
-                    {isSignup ? "Registrati" : "Accedi"}
+                    {isSignup ? "Crea account" : "Accedi"}
                   </ThemedText>
                 )}
-              </Pressable>
+              </PressableScale>
             </View>
-
-            <Pressable
-              onPress={() => {
-                setMessage(null);
-                setMode(isSignup ? "signin" : "signup");
-              }}
-            >
-              <ThemedText type="small" themeColor="textSecondary" style={styles.toggle}>
-                {isSignup ? "Hai già un account? Accedi" : "Non hai un account? Registrati"}
-              </ThemedText>
-            </Pressable>
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </ThemedView>
@@ -165,24 +202,46 @@ const createStyles = (colors: Palette) =>
     safe: { flex: 1 },
     kav: { flex: 1 },
     content: {
-      flex: 1,
+      flexGrow: 1,
       justifyContent: "center",
       paddingHorizontal: Spacing.four,
-      gap: Spacing.two,
+      paddingVertical: Spacing.six,
+      gap: Spacing.four,
+    },
+    brandBlock: {
+      alignItems: "center",
+      gap: Spacing.one,
     },
     brand: {
-      textAlign: "center",
-      color: colors.accent,
+      fontSize: 52,
+      lineHeight: 56,
     },
     subtitle: {
       textAlign: "center",
-      marginBottom: Spacing.three,
+      maxWidth: 260,
+    },
+    segment: {
+      flexDirection: "row",
+      padding: 4,
+      borderRadius: Radii.pill,
+      backgroundColor: colors.backgroundSelected,
+    },
+    segmentItem: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: Spacing.two + 2,
+      borderRadius: Radii.pill,
+    },
+    segmentItemActive: {
+      backgroundColor: colors.accent,
+      ...Shadows.soft,
     },
     form: {
       gap: Spacing.three,
     },
     input: {
-      height: 52,
+      height: 54,
       paddingHorizontal: Spacing.three,
       borderRadius: Radii.card,
       backgroundColor: colors.card,
@@ -192,7 +251,7 @@ const createStyles = (colors: Palette) =>
       fontSize: 16,
     },
     message: {
-      color: colors.accentSecondary,
+      color: colors.accentTertiary,
       textAlign: "center",
     },
     button: {
@@ -201,17 +260,14 @@ const createStyles = (colors: Palette) =>
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: colors.accent,
+      ...Shadows.soft,
     },
     buttonDisabled: {
       opacity: 0.6,
     },
     buttonText: {
-      color: colors.background,
+      color: colors.onAccent,
       fontWeight: "700",
       fontSize: 16,
-    },
-    toggle: {
-      textAlign: "center",
-      marginTop: Spacing.three,
     },
   });
