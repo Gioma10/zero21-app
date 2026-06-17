@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { Order, OrderItem } from "@/types";
 
-const ORDER_COLUMNS = "id, createdAt:created_at, status, items, total";
+const ORDER_COLUMNS =
+  "id, createdAt:created_at, status, items, total, vendorId:vendor_id";
 
 // --- LETTURA: la lista degli ordini, dal più recente ---
 async function fetchOrders(): Promise<Order[]> {
@@ -41,12 +42,24 @@ export function useOrder(id: string) {
 }
 
 // --- SCRITTURA: crea un nuovo ordine ---
-type NewOrder = { items: OrderItem[]; total: number };
+// vendorId = id del ristorante (= UID del vendor) a cui instradare l'ordine.
+type NewOrder = { items: OrderItem[]; total: number; vendorId: string };
 
 async function createOrder(order: NewOrder): Promise<Order> {
+  // Il cliente loggato: serve per intestare l'ordine (user_id) e passare la RLS.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Devi essere autenticato per ordinare.");
+
   const { data, error } = await supabase
     .from("orders")
-    .insert({ items: order.items, total: order.total }) // id, created_at, status li mette il DB
+    .insert({
+      items: order.items,
+      total: order.total,
+      vendor_id: order.vendorId, // a quale ristorante arriva l'ordine
+      user_id: user.id, // chi ha ordinato
+    }) // id, created_at, status li mette il DB
     .select(ORDER_COLUMNS)
     .single(); // ci facciamo restituire la riga appena creata
 

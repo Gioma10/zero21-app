@@ -54,4 +54,5 @@ export type Order = {
   status: OrderStatus;
   items: OrderItem[];
   total: number; // euro
+  vendorId: string; // ristorante a cui è instradato l'ordine
 };

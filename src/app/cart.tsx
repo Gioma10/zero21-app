@@ -24,6 +24,22 @@ export default function CartScreen() {
   const total = cart.subtotal + DELIVERY_FEE + SERVICE_FEE;
 
   function checkout() {
+    // Tutti i piatti del carrello appartengono allo stesso ristorante:
+    // il vendorId dell'ordine è il restaurantId dei piatti.
+    const vendorId = cart.items[0]?.dish.restaurantId;
+    if (!vendorId) {
+      Alert.alert("Errore", "Carrello vuoto.");
+      return;
+    }
+    const mixed = cart.items.some((i) => i.dish.restaurantId !== vendorId);
+    if (mixed) {
+      Alert.alert(
+        "Ristoranti diversi",
+        "Il carrello contiene piatti di ristoranti diversi. Puoi ordinare da un solo ristorante alla volta.",
+      );
+      return;
+    }
+
     createOrder.mutate(
       {
         items: cart.items.map((i) => ({
@@ -32,6 +48,7 @@ export default function CartScreen() {
           price: i.dish.price,
         })),
         total,
+        vendorId,
       },
       {
         onSuccess: (order) => {
