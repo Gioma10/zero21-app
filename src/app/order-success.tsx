@@ -9,6 +9,7 @@ import { ThemedView } from "@/components/themed-view";
 import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { useOrder } from "@/hooks/use-orders";
+import { orderStatusLabelOf } from "@/types";
 
 export default function OrderSuccessScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,7 +41,7 @@ export default function OrderSuccessScreen() {
             Ordine confermato!
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
-            Ordine #{order.id.slice(0, 8)} · {order.status}
+            Ordine #{order.id.slice(0, 8)} · {orderStatusLabelOf(order.status)}
           </ThemedText>
 
           {/* Riepilogo dell'ordine */}

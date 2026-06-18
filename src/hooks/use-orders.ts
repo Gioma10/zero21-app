@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { supabase } from "@/lib/supabase";
 import type { Order, OrderItem } from "@/types";
@@ -65,6 +66,44 @@ async function createOrder(order: NewOrder): Promise<Order> {
 
   if (error) throw error;
   return data as Order;
+}
+
+// --- REALTIME: gli aggiornamenti del vendor arrivano live al cliente ---
+// Quando il ristorante avanza lo stato di un ordine (UPDATE), o ne arriva uno
+// nuovo, invalidiamo la cache: la tab "I tuoi ordini" e la schermata di
+// conferma si aggiornano da sole, senza pull-to-refresh.
+// RLS-safe: il filtro user_id combacia con la policy di SELECT sugli ordini.
+export function useOrdersRealtime(userId: string | null | undefined) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`orders:user:${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          // payload.new/old è la riga grezza del DB: ci basta l'id.
+          const row = (payload.new ?? payload.old) as { id?: string };
+          if (row?.id) {
+            queryClient.invalidateQueries({ queryKey: ["order", row.id] });
+          }
+          queryClient.invalidateQueries({ queryKey: ["orders"] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, queryClient]);
 }
 
 // useMutation = per le operazioni che MODIFICANO i dati (insert/update/delete).

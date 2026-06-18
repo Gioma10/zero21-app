@@ -7,6 +7,7 @@ import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import { AuthProvider, useAuth } from "@/context/auth";
 import { CartProvider } from "@/context/cart";
 import { ThemeModeProvider, useThemeMode } from "@/context/theme-mode";
+import { useOrdersRealtime } from "@/hooks/use-orders";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,9 @@ function RootNavigator() {
   const { session, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // Aggiornamenti live degli ordini del cliente (stato avanzato dal vendor).
+  useOrdersRealtime(session?.user?.id);
 
   useEffect(() => {
     if (isLoading) return;

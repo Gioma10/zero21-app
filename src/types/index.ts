@@ -38,8 +38,30 @@ export type CartItem = {
   qty: number;
 };
 
-// Stati possibili di un ordine (union type = guardrail)
-export type OrderStatus = "In preparazione" | "In consegna" | "Consegnato" | "Annullato";
+// Stati possibili di un ordine: CODICI canonici nel DB, condivisi con la
+// dashboard vendor. Le etichette italiane sono solo per la UI (vedi sotto).
+export type OrderStatus =
+  | "pending"
+  | "preparing"
+  | "ready"
+  | "on_the_way"
+  | "delivered"
+  | "cancelled";
+
+// Codice stato → etichetta italiana mostrata nell'interfaccia.
+export const orderStatusLabel: Record<OrderStatus, string> = {
+  pending: "In attesa",
+  preparing: "In preparazione",
+  ready: "Pronto",
+  on_the_way: "In consegna",
+  delivered: "Consegnato",
+  cancelled: "Annullato",
+};
+
+// Etichetta da mostrare per uno stato; fallback sul valore grezzo se ignoto.
+export function orderStatusLabelOf(status: string): string {
+  return orderStatusLabel[status as OrderStatus] ?? status;
+}
 
 // Una riga dell'ordine: "scatto" del piatto al momento dell'acquisto
 export type OrderItem = {

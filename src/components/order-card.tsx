@@ -4,7 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
-import type { Order, OrderStatus } from "@/types";
+import { orderStatusLabelOf, type Order, type OrderStatus } from "@/types";
 
 // Formatta il timestamp ISO del DB in "13/06 · 20:45" (senza dipendere da Intl).
 function formatDate(iso: string) {
@@ -18,9 +18,9 @@ function formatDate(iso: string) {
 
 function statusColor(status: OrderStatus, colors: Palette) {
   switch (status) {
-    case "Consegnato":
+    case "delivered":
       return colors.accentSecondary; // sabbia/oro = successo
-    case "Annullato":
+    case "cancelled":
       return colors.textSecondary; // grigio = inattivo
     default:
       return colors.accent; // verde = in corso
@@ -40,7 +40,7 @@ export function OrderCard({ order }: { order: Order }) {
         <View style={[styles.badge, { borderColor: color }]}>
           <View style={[styles.dot, { backgroundColor: color }]} />
           <ThemedText type="small" style={{ color }}>
-            {order.status}
+            {orderStatusLabelOf(order.status)}
           </ThemedText>
         </View>
       </View>
