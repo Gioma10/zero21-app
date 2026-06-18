@@ -18,7 +18,9 @@ import { useDishes } from "@/hooks/use-dishes";
 import { useRestaurant } from "@/hooks/use-restaurants";
 import type { DishSection } from "@/types";
 
-const SECTION_ORDER: DishSection[] = ["Antipasti", "Primi", "Secondi", "Dolci", "Drink"];
+// Ordine "preferito" delle sezioni note. Le sezioni libere create dal vendor
+// (es. "Pizze") NON vengono nascoste: appaiono dopo, nell'ordine in cui compaiono.
+const PREFERRED_SECTIONS: DishSection[] = ["Antipasti", "Primi", "Secondi", "Dolci", "Drink"];
 
 export default function RestaurantScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,7 +52,13 @@ export default function RestaurantScreen() {
     );
   }
 
-  const sections = SECTION_ORDER.filter((s) => menu.some((d) => d.section === s));
+  // Sezioni effettivamente presenti nel menù, ordinate: prima quelle note
+  // (nell'ordine preferito), poi le eventuali sezioni libere del vendor.
+  const present = Array.from(new Set(menu.map((d) => d.section)));
+  const sections = [
+    ...PREFERRED_SECTIONS.filter((s) => present.includes(s)),
+    ...present.filter((s) => !PREFERRED_SECTIONS.includes(s as DishSection)),
+  ];
   const freeDelivery = restaurant.deliveryFee === 0;
 
   return (

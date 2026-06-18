@@ -17,7 +17,9 @@ export type Dish = {
   description: string;
   price: number; // euro
   image: string; // URL foto
-  section: DishSection;
+  // Sezione del menu: testo libero deciso dal vendor (es. "Pizze", "Bibite").
+  // NON è un union fisso: il vendor può creare sezioni qualsiasi.
+  section: string;
 };
 
 // Un ristorante della Home

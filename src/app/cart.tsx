@@ -11,9 +11,10 @@ import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { useCart } from "@/context/cart";
 import { useTheme } from "@/hooks/use-theme";
 import { useCreateOrder } from "@/hooks/use-orders";
+import { useRestaurant } from "@/hooks/use-restaurants";
 
-// Costi fissi (in futuro arriveranno dal ristorante / backend).
-const DELIVERY_FEE = 3.99;
+// Commissione di servizio della piattaforma (fissa). La consegna invece
+// arriva dal ristorante (restaurants.delivery_fee).
 const SERVICE_FEE = 2.0;
 
 export default function CartScreen() {
@@ -21,7 +22,13 @@ export default function CartScreen() {
   const createOrder = useCreateOrder();
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const total = cart.subtotal + DELIVERY_FEE + SERVICE_FEE;
+
+  // Tutti i piatti del carrello sono dello stesso ristorante: ne leggiamo la
+  // delivery fee reale. Finché carica (o carrello vuoto) usiamo 0.
+  const restaurantId = cart.items[0]?.dish.restaurantId ?? "";
+  const { data: restaurant } = useRestaurant(restaurantId);
+  const deliveryFee = restaurant?.deliveryFee ?? 0;
+  const total = cart.subtotal + deliveryFee + SERVICE_FEE;
 
   function checkout() {
     // Tutti i piatti del carrello appartengono allo stesso ristorante:
@@ -141,7 +148,7 @@ export default function CartScreen() {
               {/* RIEPILOGO */}
               <View style={styles.summary}>
                 <SummaryRow label="Subtotale" value={cart.subtotal} />
-                <SummaryRow label="Consegna" value={DELIVERY_FEE} />
+                <SummaryRow label="Consegna" value={deliveryFee} />
                 <SummaryRow label="Servizio" value={SERVICE_FEE} />
                 <View style={styles.divider} />
                 <View style={styles.summaryRow}>
