@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import Animated, { FadeIn, FadeOut, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -77,11 +78,13 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Wordmark + tagline */}
+            {/* Logo + tagline */}
             <View style={styles.brandBlock}>
-              <ThemedText type="display" themeColor="accent" style={styles.brand}>
-                zero21
-              </ThemedText>
+              <Image
+                source={require("@/assets/images/logo-mark.png")}
+                style={styles.logo}
+                contentFit="contain"
+              />
               <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
                 Il meglio della Costa Smeralda, a casa tua.
               </ThemedText>
@@ -210,11 +213,12 @@ const createStyles = (colors: Palette) =>
     },
     brandBlock: {
       alignItems: "center",
-      gap: Spacing.one,
+      gap: Spacing.two,
     },
-    brand: {
-      fontSize: 52,
-      lineHeight: 56,
+    logo: {
+      width: 140,
+      height: 140,
+      borderRadius: Radii.card,
     },
     subtitle: {
       textAlign: "center",
