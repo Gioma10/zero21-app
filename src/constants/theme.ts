@@ -8,39 +8,40 @@ import "@/global.css";
 import { Platform } from "react-native";
 
 export const Colors = {
-  // Costa Smeralda "di giorno": sabbia calda e luminosa, verde smeraldo, oro.
+  // Costa Smeralda "di giorno": sabbia calda e luminosa; i verdi sono allineati
+  // al brand del logo ZERO21 (verde smeraldo hue ~163). Oro/corallo come caldi.
   light: {
     text: "#1C2B22",
     textSecondary: "#51604F", // approfondito: ~4.6:1 sulla sabbia (prima 6B7A6C falliva a 3.4)
     background: "#F6F0E4",
     card: "#FFFDF7",
     backgroundElement: "#FFFDF7",
-    backgroundSelected: "#E7EFE6", // tinta smeraldo chiarissima per gli stati attivi
+    backgroundSelected: "#D6EFE3", // tinta menta chiarissima per gli stati attivi
     border: "#E3D9C5",
-    // Smeraldo profondo: come TESTO su sabbia fa ~4.4:1, come fondo regge bianco a ~5:1.
-    accent: "#0A6E4A",
-    // Smeraldo brillante: solo per gradienti, glow e grandi superfici (barra 3:1).
-    accentBright: "#18A36E",
+    // Smeraldo del brand: come TESTO su sabbia fa 4.76:1, come fondo regge bianco a 5.4:1.
+    accent: "#007A4B",
+    // Smeraldo brillante: solo per gradienti, glow e grandi superfici.
+    accentBright: "#09BB83",
     accentSecondary: "#A8772A", // oro più caldo e leggibile (≥3:1 in bold/large)
     accentTertiary: "#C2452C", // corallo/terracotta: l'accento "caldo" e gli inviti all'azione
     onAccent: "#FFFFFF", // testo/icone sopra i fondi smeraldo pieni
-    scrim: "rgba(10, 30, 22, 0.55)", // velo sopra le foto per far risaltare il testo
+    scrim: "rgba(6, 22, 19, 0.55)", // velo sopra le foto per far risaltare il testo
   },
-  // Costa Smeralda "di sera": verde caldo, smeraldo brillante, sabbia/oro.
+  // "Di sera" = il mondo del logo: verde-foresta profondo + menta brillante (#52EDB3).
   dark: {
-    text: "#EFEADD",
-    textSecondary: "#9AA796",
-    background: "#101814",
-    card: "#1B241D",
-    backgroundElement: "#1B241D",
-    backgroundSelected: "#27322A",
-    border: "#2E3A30",
-    accent: "#2BB888",
-    accentBright: "#3BD79F",
+    text: "#E7F1ED",
+    textSecondary: "#9FB1AB",
+    background: "#061613", // verde-foresta del logo, approfondito per lo schermo
+    card: "#0E2521", // ≈ colore pieno dello sfondo del logo
+    backgroundElement: "#0E2521",
+    backgroundSelected: "#15342D",
+    border: "#243B36",
+    accent: "#44DBA4",
+    accentBright: "#54EDB3", // la menta del logo
     accentSecondary: "#E0C07A",
     accentTertiary: "#F0795E",
-    onAccent: "#08120C", // testo/icone sopra lo smeraldo brillante in dark
-    scrim: "rgba(5, 12, 9, 0.6)",
+    onAccent: "#08120C", // testo/icone sopra la menta brillante in dark
+    scrim: "rgba(3, 11, 9, 0.6)",
   },
 } as const;
 
