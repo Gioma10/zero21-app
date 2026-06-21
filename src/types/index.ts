@@ -72,6 +72,22 @@ export type OrderItem = {
   price: number; // prezzo unitario quando è stato ordinato
 };
 
+// Indirizzo di consegna a campi separati. Usato sia come default sul profilo
+// (user_metadata.address) sia come snapshot sull'ordine.
+export type DeliveryAddress = {
+  street: string; // via e civico
+  city: string; // città
+  zip: string; // CAP
+  notes: string; // note per il rider (scala, citofono, orari...)
+};
+
+export const emptyAddress: DeliveryAddress = {
+  street: "",
+  city: "",
+  zip: "",
+  notes: "",
+};
+
 export type Order = {
   id: string;
   createdAt: string; // timestamp ISO dal database
@@ -79,4 +95,10 @@ export type Order = {
   items: OrderItem[];
   total: number; // euro
   vendorId: string; // ristorante a cui è instradato l'ordine
+  // Indirizzo di consegna (null sugli ordini storici).
+  deliveryStreet: string | null;
+  deliveryCity: string | null;
+  deliveryZip: string | null;
+  deliveryNotes: string | null;
+  contactPhone: string | null; // telefono di contatto per la consegna
 };

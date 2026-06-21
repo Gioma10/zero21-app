@@ -88,7 +88,15 @@ create table if not exists public.orders (
   items      jsonb   not null default '[]'::jsonb,
   total      numeric not null default 0,
   user_id    uuid,
-  vendor_id  text
+  vendor_id  text,
+  -- Indirizzo di consegna: snapshot al checkout (campi separati). Il cliente
+  -- lo inserisce in app; vendor e admin lo leggono dall'ordine per consegnare.
+  delivery_street text,
+  delivery_city   text,
+  delivery_zip    text,
+  delivery_notes  text,
+  -- Telefono di contatto per la consegna (snapshot dal profilo del cliente).
+  contact_phone   text
 );
 
 -- Allineamento se la tabella preesisteva (è il caso dell'errore "vendor_id
@@ -99,6 +107,12 @@ alter table public.orders add column if not exists items      jsonb   not null d
 alter table public.orders add column if not exists total      numeric not null default 0;
 alter table public.orders add column if not exists user_id    uuid;
 alter table public.orders add column if not exists vendor_id  text;
+-- Indirizzo di consegna (campi separati). Aggiunti su DB preesistenti.
+alter table public.orders add column if not exists delivery_street text;
+alter table public.orders add column if not exists delivery_city   text;
+alter table public.orders add column if not exists delivery_zip    text;
+alter table public.orders add column if not exists delivery_notes  text;
+alter table public.orders add column if not exists contact_phone   text;
 
 -- Normalizza eventuali stati "legacy" (vecchie etichette italiane) ai codici,
 -- così il successivo CHECK non fallisce su righe preesistenti.

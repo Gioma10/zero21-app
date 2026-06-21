@@ -57,7 +57,12 @@ export type Database = {
       }
       orders: {
         Row: {
+          contact_phone: string | null
           created_at: string
+          delivery_city: string | null
+          delivery_notes: string | null
+          delivery_street: string | null
+          delivery_zip: string | null
           id: string
           items: Json
           status: string
@@ -66,7 +71,12 @@ export type Database = {
           vendor_id: string | null
         }
         Insert: {
+          contact_phone?: string | null
           created_at?: string
+          delivery_city?: string | null
+          delivery_notes?: string | null
+          delivery_street?: string | null
+          delivery_zip?: string | null
           id?: string
           items?: Json
           status?: string
@@ -75,7 +85,12 @@ export type Database = {
           vendor_id?: string | null
         }
         Update: {
+          contact_phone?: string | null
           created_at?: string
+          delivery_city?: string | null
+          delivery_notes?: string | null
+          delivery_street?: string | null
+          delivery_zip?: string | null
           id?: string
           items?: Json
           status?: string

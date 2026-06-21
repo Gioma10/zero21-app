@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { SFSymbol, SymbolView } from "expo-symbols";
 import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -11,8 +12,8 @@ import { Radii, Shadows, Spacing, type Palette } from "@/constants/theme";
 import { useAuth } from "@/context/auth";
 import { useTheme } from "@/hooks/use-theme";
 
-const menuItems: { icon: SFSymbol; label: string }[] = [
-  { icon: "mappin.and.ellipse", label: "I miei indirizzi" },
+const menuItems: { icon: SFSymbol; label: string; route?: string }[] = [
+  { icon: "mappin.and.ellipse", label: "I miei indirizzi", route: "/addresses" },
   { icon: "creditcard.fill", label: "Metodi di pagamento" },
   { icon: "bell.fill", label: "Notifiche" },
   { icon: "questionmark.circle.fill", label: "Aiuto" },
@@ -64,6 +65,7 @@ export default function ProfileScreen() {
               <Pressable
                 key={item.label}
                 style={[styles.row, i === menuItems.length - 1 && styles.rowLast]}
+                onPress={item.route ? () => router.push(item.route as never) : undefined}
               >
                 <View style={styles.rowIcon}>
                   <SymbolView name={item.icon} size={18} tintColor={colors.accent} />

@@ -2,6 +2,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 import { supabase } from "@/lib/supabase";
+import type { DeliveryAddress } from "@/types";
 
 type AuthContextValue = {
   session: Session | null;
@@ -11,8 +12,10 @@ type AuthContextValue = {
   signUp: (
     email: string,
     password: string,
-    meta?: { displayName?: string; phone?: string },
+    meta?: { displayName?: string; phone?: string; address?: DeliveryAddress },
   ) => Promise<{ error: string | null }>;
+  // Aggiorna l'indirizzo di consegna predefinito (user_metadata.address).
+  updateAddress: (address: DeliveryAddress) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -45,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signUp(
     email: string,
     password: string,
-    meta?: { displayName?: string; phone?: string },
+    meta?: { displayName?: string; phone?: string; address?: DeliveryAddress },
   ) {
     const { error } = await supabase.auth.signUp({
       email,
@@ -53,9 +56,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: {
         // Dati extra salvati in user_metadata (auth.users). "display_name"
         // è la chiave che Supabase mostra come nome anche nel dashboard.
-        data: { display_name: meta?.displayName, phone: meta?.phone },
+        // `address` è l'indirizzo di consegna predefinito (oggetto a campi
+        // separati) che pre-compila il checkout.
+        data: {
+          display_name: meta?.displayName,
+          phone: meta?.phone,
+          address: meta?.address,
+        },
       },
     });
+    return { error: error?.message ?? null };
+  }
+
+  async function updateAddress(address: DeliveryAddress) {
+    const { error } = await supabase.auth.updateUser({ data: { address } });
     return { error: error?.message ?? null };
   }
 
@@ -65,7 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, isLoading, signIn, signUp, signOut }}
+      value={{
+        session,
+        user: session?.user ?? null,
+        isLoading,
+        signIn,
+        signUp,
+        updateAddress,
+        signOut,
+      }}
     >
       {children}
     </AuthContext.Provider>

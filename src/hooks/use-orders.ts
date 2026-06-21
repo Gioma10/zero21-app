@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import { supabase } from "@/lib/supabase";
-import type { Order, OrderItem } from "@/types";
+import type { DeliveryAddress, Order, OrderItem } from "@/types";
 
+// Stringa literal (NON concatenata): supabase-js infietta il tipo del risultato
+// dal literal del select, quindi va tenuta su una riga sola.
 const ORDER_COLUMNS =
-  "id, createdAt:created_at, status, items, total, vendorId:vendor_id";
+  "id, createdAt:created_at, status, items, total, vendorId:vendor_id, deliveryStreet:delivery_street, deliveryCity:delivery_city, deliveryZip:delivery_zip, deliveryNotes:delivery_notes, contactPhone:contact_phone";
 
 // --- LETTURA: la lista degli ordini, dal più recente ---
 async function fetchOrders(): Promise<Order[]> {
@@ -44,7 +46,13 @@ export function useOrder(id: string) {
 
 // --- SCRITTURA: crea un nuovo ordine ---
 // vendorId = id del ristorante (= UID del vendor) a cui instradare l'ordine.
-type NewOrder = { items: OrderItem[]; total: number; vendorId: string };
+type NewOrder = {
+  items: OrderItem[];
+  total: number;
+  vendorId: string;
+  address: DeliveryAddress;
+  phone: string; // telefono di contatto per la consegna
+};
 
 async function createOrder(order: NewOrder): Promise<Order> {
   // Il cliente loggato: serve per intestare l'ordine (user_id) e passare la RLS.
@@ -60,6 +68,12 @@ async function createOrder(order: NewOrder): Promise<Order> {
       total: order.total,
       vendor_id: order.vendorId, // a quale ristorante arriva l'ordine
       user_id: user.id, // chi ha ordinato
+      // Snapshot indirizzo di consegna (campi vuoti → null).
+      delivery_street: order.address.street.trim() || null,
+      delivery_city: order.address.city.trim() || null,
+      delivery_zip: order.address.zip.trim() || null,
+      delivery_notes: order.address.notes.trim() || null,
+      contact_phone: order.phone.trim() || null,
     }) // id, created_at, status li mette il DB
     .select(ORDER_COLUMNS)
     .single(); // ci facciamo restituire la riga appena creata
