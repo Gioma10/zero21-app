@@ -82,6 +82,37 @@ async function createOrder(order: NewOrder): Promise<Order> {
   return data as Order;
 }
 
+// --- SCRITTURA: il cliente annulla un proprio ordine ancora "pending" ---
+// Filtriamo su status='pending' anche lato query: è una guardia in più, ma la
+// garanzia vera è la RLS ("orders: cliente annulla i propri pending"), che
+// impedisce di annullare un ordine già in preparazione. Se 0 righe combaciano
+// (stato già avanzato dal ristorante) restituiamo un errore parlante.
+async function cancelOrder(id: string): Promise<Order> {
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ status: "cancelled" })
+    .eq("id", id)
+    .eq("status", "pending")
+    .select(ORDER_COLUMNS)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("NOT_PENDING");
+  return data as Order;
+}
+
+export function useCancelOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: cancelOrder,
+    onSuccess: (order) => {
+      queryClient.setQueryData(["order", order.id], order);
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+}
+
 // --- REALTIME: gli aggiornamenti del vendor arrivano live al cliente ---
 // Quando il ristorante avanza lo stato di un ordine (UPDATE), o ne arriva uno
 // nuovo, invalidiamo la cache: la tab "I tuoi ordini" e la schermata di

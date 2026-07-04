@@ -87,6 +87,17 @@ create policy "orders: vendor aggiorna i propri"
   using (vendor_id = auth.uid()::text)
   with check (vendor_id = auth.uid()::text);
 
+-- UPDATE: il cliente può annullare un proprio ordine SOLO finché è "pending"
+-- (il ristorante non l'ha ancora preso in carico). `using` vede la riga PRIMA
+-- dell'update (deve essere pending del cliente), `with check` vede la riga DOPO
+-- (l'unico esito ammesso è "cancelled"): così il cliente non può far avanzare
+-- lo stato né annullare cibo già in preparazione.
+drop policy if exists "orders: cliente annulla i propri pending" on public.orders;
+create policy "orders: cliente annulla i propri pending"
+  on public.orders for update
+  using (user_id = auth.uid() and status = 'pending')
+  with check (user_id = auth.uid() and status = 'cancelled');
+
 -- Realtime: la dashboard riceve i nuovi ordini in tempo reale.
 -- (idempotente: ignora l'errore se la tabella è già nella publication)
 do $$

@@ -1,8 +1,9 @@
 import { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Radii, Spacing, type Palette } from "@/constants/theme";
+import { useCancelOrder } from "@/hooks/use-orders";
 import { useTheme } from "@/hooks/use-theme";
 import { orderStatusLabelOf, type Order, type OrderStatus } from "@/types";
 
@@ -32,6 +33,38 @@ export function OrderCard({ order }: { order: Order }) {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const color = statusColor(order.status, colors);
   const summary = order.items.map((i) => `${i.qty}× ${i.name}`).join(", ");
+  const cancelOrder = useCancelOrder();
+
+  // L'annullamento è possibile solo finché il ristorante non ha accettato
+  // l'ordine (stato "pending"): dopo, il cibo è in preparazione.
+  const canCancel = order.status === "pending";
+
+  function confirmCancel() {
+    Alert.alert(
+      "Annullare l'ordine?",
+      `L'ordine #${order.id.slice(0, 8)} verrà annullato. Puoi farlo solo finché il ristorante non lo accetta.`,
+      [
+        { text: "Torna indietro", style: "cancel" },
+        {
+          text: "Annulla ordine",
+          style: "destructive",
+          onPress: () =>
+            cancelOrder.mutate(order.id, {
+              onError: (error) => {
+                const alreadyTaken =
+                  error instanceof Error && error.message === "NOT_PENDING";
+                Alert.alert(
+                  alreadyTaken ? "Non più annullabile" : "Errore",
+                  alreadyTaken
+                    ? "Il ristorante ha già preso in carico l'ordine. Contattalo per annullarlo."
+                    : "Non è stato possibile annullare l'ordine. Riprova.",
+                );
+              },
+            }),
+        },
+      ],
+    );
+  }
 
   return (
     <View style={styles.card}>
@@ -60,6 +93,26 @@ export function OrderCard({ order }: { order: Order }) {
           € {order.total.toFixed(2)}
         </ThemedText>
       </View>
+
+      {canCancel && (
+        <Pressable
+          onPress={confirmCancel}
+          disabled={cancelOrder.isPending}
+          style={({ pressed }) => [
+            styles.cancelBtn,
+            pressed && styles.cancelBtnPressed,
+            cancelOrder.isPending && styles.cancelBtnDisabled,
+          ]}
+        >
+          {cancelOrder.isPending ? (
+            <ActivityIndicator size="small" color={colors.accentTertiary} />
+          ) : (
+            <ThemedText type="smallBold" style={{ color: colors.accentTertiary }}>
+              Annulla ordine
+            </ThemedText>
+          )}
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -96,5 +149,20 @@ const createStyles = (colors: Palette) =>
     total: {
       color: colors.accent,
       fontWeight: "700",
+    },
+    cancelBtn: {
+      marginTop: Spacing.one,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: Spacing.two,
+      borderRadius: Radii.pill,
+      borderWidth: 1,
+      borderColor: colors.accentTertiary,
+    },
+    cancelBtnPressed: {
+      opacity: 0.6,
+    },
+    cancelBtnDisabled: {
+      opacity: 0.5,
     },
   });
