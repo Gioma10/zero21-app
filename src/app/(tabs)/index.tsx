@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Image } from "expo-image";
+import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useMemo, useState } from "react";
 import {
@@ -19,6 +19,7 @@ import { RestaurantCard } from "@/components/restaurant-card";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Radii, Shadows, Spacing, type Palette } from "@/constants/theme";
+import { useAuth } from "@/context/auth";
 import { useThemeMode } from "@/context/theme-mode";
 import { categories } from "@/data/mock";
 import { useRestaurants } from "@/hooks/use-restaurants";
@@ -26,12 +27,21 @@ import { useTheme } from "@/hooks/use-theme";
 
 export default function HomeScreen() {
   const colors = useTheme();
+  const { user } = useAuth();
   const { mode, toggle } = useThemeMode();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [selected, setSelected] = useState("all");
+  const [query, setQuery] = useState("");
+
+  // Avatar in alto a destra: mostra l'iniziale dell'utente, come nel profilo.
+  const email = user?.email ?? "";
+  const displayName =
+    (user?.user_metadata?.display_name as string) || email.split("@")[0] || "Utente";
+  const initial = displayName.charAt(0).toUpperCase() || "?";
+
   const {
     data: restaurants = [],
     isLoading,
@@ -40,10 +50,16 @@ export default function HomeScreen() {
     isRefetching,
   } = useRestaurants();
 
-  const visibleRestaurants =
-    selected === "all"
-      ? restaurants
-      : restaurants.filter((r) => r.tags.includes(selected));
+  // Filtro combinato: categoria selezionata + testo di ricerca (nome o cucina).
+  const q = query.trim().toLowerCase();
+  const visibleRestaurants = restaurants.filter((r) => {
+    const matchesCategory = selected === "all" || r.tags.includes(selected);
+    const matchesQuery =
+      q === "" ||
+      r.name.toLowerCase().includes(q) ||
+      r.tags.some((t) => t.toLowerCase().includes(q));
+    return matchesCategory && matchesQuery;
+  });
 
   return (
     <ThemedView style={styles.screen}>
@@ -91,16 +107,22 @@ export default function HomeScreen() {
                     tintColor="#FFFFFF"
                   />
                 </Pressable>
-                <Image
-                  source="https://picsum.photos/seed/zero21-avatar/100/100"
+                <Pressable
                   style={styles.avatar}
-                  contentFit="cover"
-                />
+                  onPress={() => router.navigate("/profile")}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Vai al profilo"
+                >
+                  <ThemedText type="smallBold" style={styles.avatarText}>
+                    {initial}
+                  </ThemedText>
+                </Pressable>
               </View>
             </View>
 
             <ThemedText type="display" style={styles.heroTitle}>
-              Il mare{"\n"}in tavola.
+              Ordina. Rilassati.{"\n"}Arriviamo noi.
             </ThemedText>
           </LinearGradient>
 
@@ -109,14 +131,16 @@ export default function HomeScreen() {
             <View style={styles.search}>
               <SymbolView name="magnifyingglass" size={18} tintColor={colors.textSecondary} />
               <TextInput
-                placeholder="Cerca ristoranti o piatti…"
+                placeholder="Cerca ristoranti o cucina…"
                 placeholderTextColor={colors.textSecondary}
                 style={styles.searchInput}
+                value={query}
+                onChangeText={setQuery}
+                autoCorrect={false}
+                returnKeyType="search"
+                clearButtonMode="while-editing"
               />
             </View>
-            <PressableScale style={styles.filterBtn} scaleTo={0.9}>
-              <SymbolView name="slider.horizontal.3" size={18} tintColor={colors.onAccent} />
-            </PressableScale>
           </View>
         </Animated.View>
 
@@ -175,6 +199,16 @@ export default function HomeScreen() {
             </ThemedText>
             <ThemedText type="small" themeColor="textSecondary" style={styles.errorText}>
               Non riusciamo a caricare i ristoranti. Controlla la rete e tira giù per riprovare.
+            </ThemedText>
+          </View>
+        ) : visibleRestaurants.length === 0 ? (
+          <View style={styles.errorBox}>
+            <SymbolView name="magnifyingglass" size={28} tintColor={colors.accentTertiary} />
+            <ThemedText type="smallBold" style={styles.errorTitle}>
+              Nessun risultato
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.errorText}>
+              Nessun ristorante corrisponde alla ricerca. Prova con un altro nome o categoria.
             </ThemedText>
           </View>
         ) : (
@@ -252,8 +286,15 @@ const createStyles = (colors: Palette) =>
       width: 42,
       height: 42,
       borderRadius: Radii.pill,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(255,255,255,0.18)",
       borderWidth: 2,
       borderColor: "rgba(255,255,255,0.6)",
+    },
+    avatarText: {
+      color: "#FFFFFF",
+      fontSize: 17,
     },
     heroTitle: {
       color: "#FFFFFF",
@@ -286,15 +327,6 @@ const createStyles = (colors: Palette) =>
       flex: 1,
       color: colors.text,
       fontSize: 16,
-    },
-    filterBtn: {
-      width: 52,
-      height: 52,
-      borderRadius: Radii.card,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: colors.accent,
-      ...Shadows.lifted,
     },
     categories: {
       gap: Spacing.two,

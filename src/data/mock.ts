@@ -5,7 +5,6 @@ export const categories: Category[] = [
   { id: "all", label: "Tutti", icon: "square.grid.2x2.fill" },
   { id: "Pizza", label: "Pizza", icon: "flame.fill" },
   { id: "Sushi", label: "Sushi", icon: "fish.fill" },
-  { id: "Pesce", label: "Pesce", icon: "leaf.fill" },
   { id: "Gourmet", label: "Gourmet", icon: "star.fill" },
 ];
 

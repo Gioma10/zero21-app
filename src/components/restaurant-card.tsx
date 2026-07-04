@@ -34,25 +34,17 @@ export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
             pointerEvents="none"
           />
 
-          {/* Riga in alto: badge consegna gratis (sx) + rating (dx) */}
-          <View style={styles.topRow}>
-            {freeDelivery ? (
+          {/* Riga in alto: badge consegna gratis */}
+          {freeDelivery ? (
+            <View style={styles.topRow}>
               <View style={[styles.pill, styles.freePill]}>
                 <SymbolView name="bicycle" size={12} tintColor="#FFFFFF" />
                 <ThemedText type="smallBold" style={styles.freePillText}>
                   Consegna gratis
                 </ThemedText>
               </View>
-            ) : (
-              <View />
-            )}
-            <View style={[styles.pill, styles.ratingPill]}>
-              <SymbolView name="star.fill" size={11} tintColor={colors.accentSecondary} />
-              <ThemedText type="smallBold" style={styles.ratingText}>
-                {restaurant.rating.toFixed(1)}
-              </ThemedText>
             </View>
-          </View>
+          ) : null}
 
           {/* Nome + cucine, sovrapposti in basso sullo scrim */}
           <View style={styles.overlayText}>
@@ -130,12 +122,6 @@ const createStyles = (colors: Palette) =>
     freePillText: {
       color: "#FFFFFF",
       fontSize: 12,
-    },
-    ratingPill: {
-      backgroundColor: "rgba(8, 18, 12, 0.55)",
-    },
-    ratingText: {
-      color: "#FFFFFF",
     },
     overlayText: {
       position: "absolute",

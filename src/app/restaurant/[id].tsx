@@ -94,12 +94,6 @@ export default function RestaurantScreen() {
             <ThemedText type="serif" style={styles.name}>
               {restaurant.name}
             </ThemedText>
-            <View style={styles.ratingBadge}>
-              <SymbolView name="star.fill" size={12} tintColor={colors.accentSecondary} />
-              <ThemedText type="smallBold" style={styles.ratingText}>
-                {restaurant.rating.toFixed(1)}
-              </ThemedText>
-            </View>
           </View>
           <ThemedText type="smallBold" themeColor="accent" style={styles.cuisine}>
             {restaurant.tags.join(" · ")}
@@ -228,16 +222,6 @@ const createStyles = (colors: Palette) =>
       gap: Spacing.two,
     },
     name: { flex: 1, fontSize: 30 },
-    ratingBadge: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: Spacing.half,
-      paddingHorizontal: Spacing.two,
-      paddingVertical: 5,
-      borderRadius: Radii.pill,
-      backgroundColor: colors.backgroundSelected,
-    },
-    ratingText: { color: colors.text },
     cuisine: { marginTop: 2 },
     stats: {
       flexDirection: "row",

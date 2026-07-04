@@ -252,15 +252,6 @@ export default function CartScreen() {
                 />
               </View>
 
-              {/* PROMO CODE (statico) */}
-              <Pressable style={styles.promo}>
-                <SymbolView name="tag.fill" size={18} tintColor={colors.accent} />
-                <ThemedText type="default" style={styles.promoLabel}>
-                  Applica codice promo
-                </ThemedText>
-                <SymbolView name="chevron.right" size={14} tintColor={colors.textSecondary} />
-              </Pressable>
-
               {/* RIEPILOGO */}
               <View style={styles.summary}>
                 <SummaryRow label="Subtotale" value={cart.subtotal} />
@@ -378,17 +369,6 @@ const createStyles = (colors: Palette) =>
       minWidth: 16,
       textAlign: "center",
     },
-    promo: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: Spacing.two,
-      padding: Spacing.three,
-      borderRadius: Radii.card,
-      backgroundColor: colors.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-    },
-    promoLabel: { flex: 1 },
     addressCard: {
       gap: Spacing.two,
       padding: Spacing.three,
