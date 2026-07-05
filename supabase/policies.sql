@@ -38,6 +38,30 @@ drop policy if exists "public: read restaurants" on public.restaurants;
 create policy "public: read restaurants"
   on public.restaurants for select using (true);
 
+-- Blindatura della commissione: `restaurants.commission_rate` è un dato di
+-- piattaforma, lo può cambiare SOLO la console admin (service role). Il vendor
+-- può aggiornare la propria riga (policy sopra) ma non questo campo: il trigger
+-- ignora ogni tentativo (insert/update) da ruoli diversi dal service role,
+-- riportando il valore precedente (o NULL in insert = usa il default globale).
+create or replace function public.lock_restaurant_commission()
+returns trigger language plpgsql as $$
+begin
+  if current_user not in ('service_role', 'postgres', 'supabase_admin') then
+    if tg_op = 'INSERT' then
+      new.commission_rate := null;
+    elsif tg_op = 'UPDATE'
+      and new.commission_rate is distinct from old.commission_rate then
+      new.commission_rate := old.commission_rate;
+    end if;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists lock_restaurant_commission on public.restaurants;
+create trigger lock_restaurant_commission
+  before insert or update on public.restaurants
+  for each row execute function public.lock_restaurant_commission();
+
 -- ---- dishes ----------------------------------------------------------------
 alter table public.dishes enable row level security;
 
@@ -106,3 +130,13 @@ begin
 exception
   when duplicate_object then null;
 end $$;
+
+-- ---- platform_settings -----------------------------------------------------
+alter table public.platform_settings enable row level security;
+
+-- Lettura pubblica: vendor (anon key) e app leggono la commissione. La
+-- SCRITTURA passa solo dalla console admin (service role, che BYPASSA la RLS):
+-- nessuna policy di insert/update per anon → non modificabile dai client.
+drop policy if exists "public: read platform settings" on public.platform_settings;
+create policy "public: read platform settings"
+  on public.platform_settings for select using (true);

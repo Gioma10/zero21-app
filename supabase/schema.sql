@@ -45,6 +45,14 @@ alter table public.restaurants add column if not exists min_order     numeric   
 alter table public.restaurants add column if not exists delivery_time text;
 alter table public.restaurants add column if not exists delivery_fee  numeric     not null default 0;
 alter table public.restaurants add column if not exists created_at    timestamptz not null default now();
+-- Commissione ZERO21 specifica del ristorante (override del default globale in
+-- platform_settings). NULL = usa il default. La scrive solo l'admin.
+alter table public.restaurants add column if not exists commission_rate numeric;
+do $$ begin
+  alter table public.restaurants
+    add constraint restaurants_commission_rate_check
+    check (commission_rate is null or (commission_rate >= 0 and commission_rate <= 1));
+exception when duplicate_object then null; end $$;
 
 -- ---- dishes ----------------------------------------------------------------
 -- `section` è testo libero (categoria nel menu, es. "Pizze", "Antipasti").
@@ -157,3 +165,23 @@ exception when duplicate_object then null; end $$;
 create index if not exists orders_vendor_id_idx on public.orders (vendor_id);
 -- Lista "i miei ordini" lato cliente.
 create index if not exists orders_user_id_idx on public.orders (user_id);
+
+-- ---- platform_settings -----------------------------------------------------
+-- Configurazione di piattaforma a RIGA SINGOLA (id = 'global'). È la FONTE
+-- UNICA della commissione ZERO21: la leggono sia la console admin (service
+-- role) sia la dashboard vendor (anon key, lettura pubblica), così un solo
+-- valore vale ovunque ed è modificabile da un unico punto (admin → Impostazioni).
+create table if not exists public.platform_settings (
+  id              text        primary key default 'global' check (id = 'global'),
+  commission_rate numeric     not null default 0.30 check (commission_rate >= 0 and commission_rate <= 1),
+  updated_at      timestamptz not null default now()
+);
+
+alter table public.platform_settings add column if not exists commission_rate numeric     not null default 0.30;
+alter table public.platform_settings add column if not exists updated_at      timestamptz not null default now();
+
+-- Riga singleton iniziale (commissione di partenza 30%). `on conflict do
+-- nothing` NON sovrascrive: le modifiche fatte dall'admin restano.
+insert into public.platform_settings (id, commission_rate)
+  values ('global', 0.30)
+  on conflict (id) do nothing;

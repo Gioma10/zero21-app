@@ -23,6 +23,7 @@ restaurants.id        == auth.uid() del vendor      (un vendor = un ristorante)
 dishes.restaurant_id  -> restaurants.id             (menu del ristorante)
 orders.vendor_id      -> restaurants.id             (ordine instradato al ristorante)
 orders.user_id        -> auth.users.id              (cliente che ha ordinato)
+platform_settings     riga singleton id='global'   (commissione ZERO21, fonte unica)
 ```
 
 Stati ordine (codici nel DB, etichette IT solo in UI):
