@@ -27,6 +27,7 @@
 create table if not exists public.restaurants (
   id            text primary key,
   name          text not null,
+  address       text,
   cover_image   text,
   tags          text[]      not null default '{}',
   rating        numeric     not null default 0,
@@ -38,6 +39,7 @@ create table if not exists public.restaurants (
 
 -- Allineamento se la tabella preesisteva con colonne mancanti.
 alter table public.restaurants add column if not exists name          text;
+alter table public.restaurants add column if not exists address       text;
 alter table public.restaurants add column if not exists cover_image   text;
 alter table public.restaurants add column if not exists tags          text[]      not null default '{}';
 alter table public.restaurants add column if not exists rating        numeric     not null default 0;
@@ -65,14 +67,12 @@ create table if not exists public.restaurant_billing (
   business_name   text        not null, -- Ragione sociale
   vat_tax_code    text        not null, -- P.IVA o Codice Fiscale
   billing_code    text        not null, -- PEC o Codice Destinatario SDI
-  billing_address text        not null, -- Indirizzo sede / fatturazione
   updated_at      timestamptz not null default now()
 );
 -- Allineamento se la tabella preesisteva con colonne mancanti.
 alter table public.restaurant_billing add column if not exists business_name   text;
 alter table public.restaurant_billing add column if not exists vat_tax_code    text;
 alter table public.restaurant_billing add column if not exists billing_code    text;
-alter table public.restaurant_billing add column if not exists billing_address text;
 alter table public.restaurant_billing add column if not exists updated_at      timestamptz not null default now();
 
 -- ---- dishes ----------------------------------------------------------------
