@@ -22,6 +22,7 @@ import { useCreateOrder } from "@/hooks/use-orders";
 import { useRestaurant } from "@/hooks/use-restaurants";
 import { ZoneSelect } from "@/components/zone-select";
 import { DEFAULT_ZONE, isValidZone, zipForZone } from "@/constants/zones";
+import { checkDeliveryArea, deliveryAreaError } from "@/lib/geocode";
 import { type DeliveryAddress } from "@/types";
 
 // Commissione di servizio della piattaforma (fissa). La consegna invece
@@ -32,6 +33,8 @@ export default function CartScreen() {
   const cart = useCart();
   const createOrder = useCreateOrder();
   const { user } = useAuth();
+  // Verifica dell'area di consegna in corso (geocodifica dell'indirizzo).
+  const [verifying, setVerifying] = useState(false);
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -71,7 +74,7 @@ export default function CartScreen() {
   const deliveryFee = restaurant?.deliveryFee ?? 0;
   const total = cart.subtotal + deliveryFee + SERVICE_FEE;
 
-  function checkout() {
+  async function checkout() {
     // Tutti i piatti del carrello appartengono allo stesso ristorante:
     // il vendorId dell'ordine è il restaurantId dei piatti.
     const vendorId = cart.items[0]?.dish.restaurantId;
@@ -103,6 +106,17 @@ export default function CartScreen() {
         "Telefono mancante",
         "Inserisci un numero di telefono di contatto.",
       );
+      return;
+    }
+
+    // L'indirizzo (eventualmente modificato qui) deve essere nel paese di
+    // Arzachena: riverifichiamo prima di creare l'ordine.
+    setVerifying(true);
+    const area = await checkDeliveryArea(address.street.trim(), address.city.trim());
+    setVerifying(false);
+    const areaError = deliveryAreaError(area);
+    if (areaError) {
+      Alert.alert("Indirizzo fuori zona", areaError);
       return;
     }
 
@@ -270,12 +284,19 @@ export default function CartScreen() {
             {/* CHECKOUT */}
             <SafeAreaView edges={["bottom"]} style={styles.footer}>
               <Pressable
-                style={[styles.checkout, createOrder.isPending && styles.checkoutDisabled]}
+                style={[
+                  styles.checkout,
+                  (createOrder.isPending || verifying) && styles.checkoutDisabled,
+                ]}
                 onPress={checkout}
-                disabled={createOrder.isPending}
+                disabled={createOrder.isPending || verifying}
               >
                 <ThemedText type="default" style={styles.checkoutText}>
-                  {createOrder.isPending ? "Invio in corso..." : "Procedi al pagamento"}
+                  {verifying
+                    ? "Verifica indirizzo..."
+                    : createOrder.isPending
+                      ? "Invio in corso..."
+                      : "Procedi al pagamento"}
                 </ThemedText>
               </Pressable>
             </SafeAreaView>

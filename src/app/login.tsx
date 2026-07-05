@@ -22,6 +22,7 @@ import { DEFAULT_ZONE, zipForZone } from "@/constants/zones";
 import { useAuth } from "@/context/auth";
 import { useTheme } from "@/hooks/use-theme";
 import { fieldErrorsOf, signInSchema, signUpSchema } from "@/lib/validation";
+import { checkDeliveryArea, deliveryAreaError } from "@/lib/geocode";
 
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
@@ -84,6 +85,18 @@ export default function LoginScreen() {
     setErrors({});
 
     setLoading(true);
+
+    // In registrazione l'indirizzo deve essere nel paese di Arzachena.
+    if (isSignup) {
+      const area = await checkDeliveryArea(street.trim(), zone);
+      const areaError = deliveryAreaError(area);
+      if (areaError) {
+        setLoading(false);
+        setErrors({ street: areaError });
+        return;
+      }
+    }
+
     const { error } = isSignup
       ? await signUp(email.trim(), password, {
           displayName: name.trim(),

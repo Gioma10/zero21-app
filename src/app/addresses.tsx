@@ -19,6 +19,7 @@ import { ThemedView } from "@/components/themed-view";
 import { ZoneSelect } from "@/components/zone-select";
 import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { DEFAULT_ZONE, isValidZone, zipForZone } from "@/constants/zones";
+import { checkDeliveryArea, deliveryAreaError } from "@/lib/geocode";
 import { useAuth } from "@/context/auth";
 import { useTheme } from "@/hooks/use-theme";
 import { emptyAddress, type DeliveryAddress } from "@/types";
@@ -55,6 +56,16 @@ export default function AddressesScreen() {
       return;
     }
     setSaving(true);
+
+    // Verifica che l'indirizzo sia davvero nel paese di Arzachena.
+    const area = await checkDeliveryArea(address.street.trim(), address.city.trim());
+    const areaError = deliveryAreaError(area);
+    if (areaError) {
+      setSaving(false);
+      Alert.alert("Indirizzo fuori zona", areaError);
+      return;
+    }
+
     const { error } = await updateAddress({
       street: address.street.trim(),
       city: address.city.trim(),
