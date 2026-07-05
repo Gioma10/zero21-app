@@ -54,6 +54,27 @@ do $$ begin
     check (commission_rate is null or (commission_rate >= 0 and commission_rate <= 1));
 exception when duplicate_object then null; end $$;
 
+-- ---- restaurant_billing ----------------------------------------------------
+-- Dati fiscali del vendor per la fatturazione ZERO21 → ristorante. Tabella
+-- SEPARATA da restaurants perché quest'ultima ha lettura PUBBLICA (anon key
+-- della delivery app): P.IVA, PEC e indirizzo sede NON devono essere pubblici.
+-- La RLS (policies.sql) dà al vendor solo la propria riga e all'admin (service
+-- role) la lettura di tutte per emettere fattura. id = restaurants.id = uid.
+create table if not exists public.restaurant_billing (
+  id              text        primary key references public.restaurants(id) on delete cascade,
+  business_name   text        not null, -- Ragione sociale
+  vat_tax_code    text        not null, -- P.IVA o Codice Fiscale
+  billing_code    text        not null, -- PEC o Codice Destinatario SDI
+  billing_address text        not null, -- Indirizzo sede / fatturazione
+  updated_at      timestamptz not null default now()
+);
+-- Allineamento se la tabella preesisteva con colonne mancanti.
+alter table public.restaurant_billing add column if not exists business_name   text;
+alter table public.restaurant_billing add column if not exists vat_tax_code    text;
+alter table public.restaurant_billing add column if not exists billing_code    text;
+alter table public.restaurant_billing add column if not exists billing_address text;
+alter table public.restaurant_billing add column if not exists updated_at      timestamptz not null default now();
+
 -- ---- dishes ----------------------------------------------------------------
 -- `section` è testo libero (categoria nel menu, es. "Pizze", "Antipasti").
 create table if not exists public.dishes (

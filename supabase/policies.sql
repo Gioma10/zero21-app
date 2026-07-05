@@ -140,3 +140,25 @@ alter table public.platform_settings enable row level security;
 drop policy if exists "public: read platform settings" on public.platform_settings;
 create policy "public: read platform settings"
   on public.platform_settings for select using (true);
+
+-- ---- restaurant_billing ----------------------------------------------------
+-- Dati fiscali: NESSUNA lettura pubblica (a differenza di restaurants). Il
+-- vendor gestisce solo la propria riga; l'admin (service role) bypassa la RLS
+-- e li legge tutti per fatturare.
+alter table public.restaurant_billing enable row level security;
+
+drop policy if exists "billing: vendor legge la propria" on public.restaurant_billing;
+create policy "billing: vendor legge la propria"
+  on public.restaurant_billing for select
+  using (id = auth.uid()::text);
+
+drop policy if exists "billing: vendor crea la propria" on public.restaurant_billing;
+create policy "billing: vendor crea la propria"
+  on public.restaurant_billing for insert
+  with check (id = auth.uid()::text);
+
+drop policy if exists "billing: vendor aggiorna la propria" on public.restaurant_billing;
+create policy "billing: vendor aggiorna la propria"
+  on public.restaurant_billing for update
+  using (id = auth.uid()::text)
+  with check (id = auth.uid()::text);
