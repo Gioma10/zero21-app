@@ -16,6 +16,7 @@ import { useCart } from "@/context/cart";
 import { useTheme } from "@/hooks/use-theme";
 import { useDishes } from "@/hooks/use-dishes";
 import { useRestaurant } from "@/hooks/use-restaurants";
+import { useDeliveryFee } from "@/hooks/use-settings";
 import type { DishSection } from "@/types";
 
 // Ordine "preferito" delle sezioni note. Le sezioni libere create dal vendor
@@ -31,6 +32,8 @@ export default function RestaurantScreen() {
 
   const { data: restaurant, isLoading } = useRestaurant(id);
   const { data: menu = [] } = useDishes(id);
+  // Costo di consegna unico di piattaforma (uguale per tutti i ristoranti).
+  const { data: deliveryFee } = useDeliveryFee();
 
   if (isLoading) {
     return (
@@ -59,7 +62,7 @@ export default function RestaurantScreen() {
     ...PREFERRED_SECTIONS.filter((s) => present.includes(s)),
     ...present.filter((s) => !PREFERRED_SECTIONS.includes(s as DishSection)),
   ];
-  const freeDelivery = restaurant.deliveryFee === 0;
+  const freeDelivery = deliveryFee === 0;
 
   return (
     <ThemedView style={styles.screen}>
@@ -117,7 +120,11 @@ export default function RestaurantScreen() {
                 type="smallBold"
                 style={freeDelivery ? styles.freeText : undefined}
               >
-                {freeDelivery ? "Gratis" : `€ ${restaurant.deliveryFee.toFixed(2)}`}
+                {deliveryFee == null
+                  ? "—"
+                  : freeDelivery
+                    ? "Gratis"
+                    : `€ ${deliveryFee.toFixed(2)}`}
               </ThemedText>
             </View>
           </View>

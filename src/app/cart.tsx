@@ -19,15 +19,11 @@ import { useAuth } from "@/context/auth";
 import { useCart } from "@/context/cart";
 import { useTheme } from "@/hooks/use-theme";
 import { useCreateOrder } from "@/hooks/use-orders";
-import { useRestaurant } from "@/hooks/use-restaurants";
+import { useDeliveryFee } from "@/hooks/use-settings";
 import { ZoneSelect } from "@/components/zone-select";
 import { DEFAULT_ZONE, isValidZone, zipForZone } from "@/constants/zones";
 import { checkDeliveryArea, deliveryAreaError } from "@/lib/geocode";
 import { type DeliveryAddress } from "@/types";
-
-// Commissione di servizio della piattaforma (fissa). La consegna invece
-// arriva dal ristorante (restaurants.delivery_fee).
-const SERVICE_FEE = 2.0;
 
 export default function CartScreen() {
   const cart = useCart();
@@ -67,12 +63,10 @@ export default function CartScreen() {
     () => (user?.user_metadata?.phone as string | undefined) ?? "",
   );
 
-  // Tutti i piatti del carrello sono dello stesso ristorante: ne leggiamo la
-  // delivery fee reale. Finché carica (o carrello vuoto) usiamo 0.
-  const restaurantId = cart.items[0]?.dish.restaurantId ?? "";
-  const { data: restaurant } = useRestaurant(restaurantId);
-  const deliveryFee = restaurant?.deliveryFee ?? 0;
-  const total = cart.subtotal + deliveryFee + SERVICE_FEE;
+  // Costo di consegna UNICO di piattaforma (gestito da admin). Finché carica
+  // usiamo 0.
+  const { data: deliveryFee = 0 } = useDeliveryFee();
+  const total = cart.subtotal + deliveryFee;
 
   async function checkout() {
     // Tutti i piatti del carrello appartengono allo stesso ristorante:
@@ -270,7 +264,6 @@ export default function CartScreen() {
               <View style={styles.summary}>
                 <SummaryRow label="Subtotale" value={cart.subtotal} />
                 <SummaryRow label="Consegna" value={deliveryFee} />
-                <SummaryRow label="Servizio" value={SERVICE_FEE} />
                 <View style={styles.divider} />
                 <View style={styles.summaryRow}>
                   <ThemedText type="smallBold">Totale</ThemedText>

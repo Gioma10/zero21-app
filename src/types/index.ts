@@ -31,7 +31,8 @@ export type Restaurant = {
   rating: number;
   minOrder: number; // ordine minimo in euro
   deliveryTime: string; // es. "30-40 min"
-  deliveryFee: number; // euro (0 = gratis)
+  // Il costo di consegna NON è per ristorante: è unico di piattaforma
+  // (platform_settings.delivery_fee). Vedi hook useDeliveryFee().
 };
 
 // Una riga del carrello: un piatto + la quantità scelta

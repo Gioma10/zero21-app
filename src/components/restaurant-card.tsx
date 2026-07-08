@@ -9,12 +9,15 @@ import { PressableScale } from "@/components/pressable-scale";
 import { ThemedText } from "@/components/themed-text";
 import { Radii, Shadows, Spacing, type Palette } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
+import { useDeliveryFee } from "@/hooks/use-settings";
 import type { Restaurant } from "@/types";
 
 export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const freeDelivery = restaurant.deliveryFee === 0;
+  // Costo di consegna unico di piattaforma (uguale per tutti i ristoranti).
+  const { data: deliveryFee } = useDeliveryFee();
+  const freeDelivery = deliveryFee === 0;
 
   return (
     <Link href={`/restaurant/${restaurant.id}`} asChild>
@@ -71,7 +74,11 @@ export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
           </ThemedText>
           <View style={styles.spacer} />
           <ThemedText type="smallBold" style={styles.fee}>
-            {freeDelivery ? "Gratis" : `€ ${restaurant.deliveryFee.toFixed(2)}`}
+            {deliveryFee == null
+              ? ""
+              : freeDelivery
+                ? "Gratis"
+                : `€ ${deliveryFee.toFixed(2)}`}
           </ThemedText>
         </View>
       </PressableScale>

@@ -112,7 +112,6 @@ export type Database = {
         Row: {
           cover_image: string | null
           created_at: string
-          delivery_fee: number
           delivery_time: string | null
           id: string
           min_order: number
@@ -123,7 +122,6 @@ export type Database = {
         Insert: {
           cover_image?: string | null
           created_at?: string
-          delivery_fee?: number
           delivery_time?: string | null
           id: string
           min_order?: number
@@ -134,7 +132,6 @@ export type Database = {
         Update: {
           cover_image?: string | null
           created_at?: string
-          delivery_fee?: number
           delivery_time?: string | null
           id?: string
           min_order?: number

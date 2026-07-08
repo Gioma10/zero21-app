@@ -33,7 +33,6 @@ create table if not exists public.restaurants (
   rating        numeric     not null default 0,
   min_order     numeric     not null default 0,
   delivery_time text,
-  delivery_fee  numeric     not null default 0,
   created_at    timestamptz not null default now()
 );
 
@@ -45,8 +44,10 @@ alter table public.restaurants add column if not exists tags          text[]    
 alter table public.restaurants add column if not exists rating        numeric     not null default 0;
 alter table public.restaurants add column if not exists min_order     numeric     not null default 0;
 alter table public.restaurants add column if not exists delivery_time text;
-alter table public.restaurants add column if not exists delivery_fee  numeric     not null default 0;
 alter table public.restaurants add column if not exists created_at    timestamptz not null default now();
+-- Il costo di consegna è ora UNICO di piattaforma (platform_settings.delivery_fee):
+-- rimuoviamo la vecchia colonna per-ristorante se un DB preesistente ce l'ha.
+alter table public.restaurants drop column if exists delivery_fee;
 -- Commissione ZERO21 specifica del ristorante (override del default globale in
 -- platform_settings). NULL = usa il default. La scrive solo l'admin.
 alter table public.restaurants add column if not exists commission_rate numeric;
@@ -189,20 +190,29 @@ create index if not exists orders_user_id_idx on public.orders (user_id);
 
 -- ---- platform_settings -----------------------------------------------------
 -- Configurazione di piattaforma a RIGA SINGOLA (id = 'global'). È la FONTE
--- UNICA della commissione ZERO21: la leggono sia la console admin (service
--- role) sia la dashboard vendor (anon key, lettura pubblica), così un solo
--- valore vale ovunque ed è modificabile da un unico punto (admin → Impostazioni).
+-- UNICA dei valori di piattaforma ZERO21 — la commissione E il costo di
+-- consegna: li leggono sia la console admin (service role) sia la dashboard
+-- vendor e la delivery app (anon key, lettura pubblica), così un solo valore
+-- vale ovunque ed è modificabile da un unico punto (admin → Impostazioni).
+-- Il costo di consegna è UNICO per tutta la piattaforma (non più per ristorante:
+-- restaurants.delivery_fee è deprecata e non più usata).
 create table if not exists public.platform_settings (
   id              text        primary key default 'global' check (id = 'global'),
   commission_rate numeric     not null default 0.30 check (commission_rate >= 0 and commission_rate <= 1),
+  delivery_fee    numeric     not null default 0 check (delivery_fee >= 0),
   updated_at      timestamptz not null default now()
 );
 
 alter table public.platform_settings add column if not exists commission_rate numeric     not null default 0.30;
+alter table public.platform_settings add column if not exists delivery_fee    numeric     not null default 0;
 alter table public.platform_settings add column if not exists updated_at      timestamptz not null default now();
+do $$ begin
+  alter table public.platform_settings
+    add constraint platform_settings_delivery_fee_check check (delivery_fee >= 0);
+exception when duplicate_object then null; end $$;
 
--- Riga singleton iniziale (commissione di partenza 30%). `on conflict do
+-- Riga singleton iniziale (commissione 30%, consegna 0€). `on conflict do
 -- nothing` NON sovrascrive: le modifiche fatte dall'admin restano.
-insert into public.platform_settings (id, commission_rate)
-  values ('global', 0.30)
+insert into public.platform_settings (id, commission_rate, delivery_fee)
+  values ('global', 0.30, 0)
   on conflict (id) do nothing;

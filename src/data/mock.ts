@@ -17,7 +17,6 @@ export const restaurants: Restaurant[] = [
     rating: 4.8,
     minOrder: 20,
     deliveryTime: "30-40 min",
-    deliveryFee: 2.5,
   },
   {
     id: "r2",
@@ -27,7 +26,6 @@ export const restaurants: Restaurant[] = [
     rating: 4.6,
     minOrder: 15,
     deliveryTime: "25-35 min",
-    deliveryFee: 1.5,
   },
   {
     id: "r3",
@@ -37,7 +35,6 @@ export const restaurants: Restaurant[] = [
     rating: 4.7,
     minOrder: 18,
     deliveryTime: "20-30 min",
-    deliveryFee: 0,
   },
 ];
 
