@@ -7,7 +7,7 @@ import type { DeliveryAddress, Order, OrderItem } from "@/types";
 // Stringa literal (NON concatenata): supabase-js infietta il tipo del risultato
 // dal literal del select, quindi va tenuta su una riga sola.
 const ORDER_COLUMNS =
-  "id, createdAt:created_at, status, items, total, vendorId:vendor_id, deliveryStreet:delivery_street, deliveryCity:delivery_city, deliveryZip:delivery_zip, deliveryNotes:delivery_notes, contactPhone:contact_phone";
+  "id, createdAt:created_at, status, items, total, vendorId:vendor_id, deliveryStreet:delivery_street, deliveryCity:delivery_city, deliveryZip:delivery_zip, deliveryNotes:delivery_notes, contactPhone:contact_phone, deliveryFee:delivery_fee";
 
 // --- LETTURA: la lista degli ordini, dal più recente ---
 async function fetchOrders(): Promise<Order[]> {
@@ -49,6 +49,7 @@ export function useOrder(id: string) {
 type NewOrder = {
   items: OrderItem[];
   total: number;
+  deliveryFee: number; // costo di consegna incluso in `total` (ricavo ZERO21)
   vendorId: string;
   address: DeliveryAddress;
   phone: string; // telefono di contatto per la consegna
@@ -66,6 +67,9 @@ async function createOrder(order: NewOrder): Promise<Order> {
     .insert({
       items: order.items,
       total: order.total,
+      // Snapshot della tariffa di consegna al checkout: è ricavo ZERO21 al 100%
+      // e serve ad admin/vendor per scorporarla dalla commissione e dal netto.
+      delivery_fee: order.deliveryFee,
       vendor_id: order.vendorId, // a quale ristorante arriva l'ordine
       user_id: user.id, // chi ha ordinato
       // Snapshot indirizzo di consegna (campi vuoti → null).

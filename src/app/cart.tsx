@@ -122,6 +122,7 @@ export default function CartScreen() {
           price: i.dish.price,
         })),
         total,
+        deliveryFee,
         vendorId,
         address,
         phone,

@@ -102,4 +102,7 @@ export type Order = {
   deliveryZip: string | null;
   deliveryNotes: string | null;
   contactPhone: string | null; // telefono di contatto per la consegna
+  // Costo di consegna incluso in `total` (snapshot al checkout). Ricavo ZERO21
+  // al 100%. Ordini storici: 0.
+  deliveryFee: number;
 };

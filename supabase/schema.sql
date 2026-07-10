@@ -126,7 +126,12 @@ create table if not exists public.orders (
   delivery_zip    text,
   delivery_notes  text,
   -- Telefono di contatto per la consegna (snapshot dal profilo del cliente).
-  contact_phone   text
+  contact_phone   text,
+  -- Costo di consegna: snapshot al checkout della tariffa di piattaforma
+  -- (platform_settings.delivery_fee). È già incluso in `total`, ma memorizzato
+  -- a parte perché è ricavo ZERO21 al 100%: non entra nel netto del ristorante
+  -- e la commissione si calcola solo sulla parte cibo (total - delivery_fee).
+  delivery_fee    numeric not null default 0
 );
 
 -- Allineamento se la tabella preesisteva (è il caso dell'errore "vendor_id
@@ -143,6 +148,9 @@ alter table public.orders add column if not exists delivery_city   text;
 alter table public.orders add column if not exists delivery_zip    text;
 alter table public.orders add column if not exists delivery_notes  text;
 alter table public.orders add column if not exists contact_phone   text;
+-- Snapshot del costo di consegna (ricavo ZERO21 100%). Ordini storici → 0,
+-- così restano invariati: food = total, consegna = 0.
+alter table public.orders add column if not exists delivery_fee    numeric not null default 0;
 
 -- Normalizza eventuali stati "legacy" (vecchie etichette italiane) ai codici,
 -- così il successivo CHECK non fallisce su righe preesistenti.
