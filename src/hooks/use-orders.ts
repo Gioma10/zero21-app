@@ -7,7 +7,11 @@ import type { DeliveryAddress, Order, OrderItem } from "@/types";
 // Stringa literal (NON concatenata): supabase-js infietta il tipo del risultato
 // dal literal del select, quindi va tenuta su una riga sola.
 const ORDER_COLUMNS =
-  "id, createdAt:created_at, status, items, total, vendorId:vendor_id, deliveryStreet:delivery_street, deliveryCity:delivery_city, deliveryZip:delivery_zip, deliveryNotes:delivery_notes, contactPhone:contact_phone, deliveryFee:delivery_fee";
+  "id, createdAt:created_at, status, items, total, vendorId:vendor_id, deliveryStreet:delivery_street, deliveryCity:delivery_city, deliveryZip:delivery_zip, deliveryNotes:delivery_notes, contactPhone:contact_phone, deliveryFee:delivery_fee, deliverySlot:delivery_slot";
+
+// Il trigger DB `enforce_slot_capacity` alza l'eccezione 'SLOT_FULL' quando la
+// fascia scelta si è appena riempita: messaggio parlante per la UI del carrello.
+export const SLOT_FULL_ERROR = "SLOT_FULL";
 
 // --- LETTURA: la lista degli ordini, dal più recente ---
 async function fetchOrders(): Promise<Order[]> {
@@ -53,6 +57,9 @@ type NewOrder = {
   vendorId: string;
   address: DeliveryAddress;
   phone: string; // telefono di contatto per la consegna
+  // Fascia di consegna scelta (ISO inizio slot). null/undefined = "appena
+  // possibile" (ristorante senza orari configurati).
+  deliverySlot?: string | null;
 };
 
 async function createOrder(order: NewOrder): Promise<Order> {
@@ -78,11 +85,20 @@ async function createOrder(order: NewOrder): Promise<Order> {
       delivery_zip: order.address.zip.trim() || null,
       delivery_notes: order.address.notes.trim() || null,
       contact_phone: order.phone.trim() || null,
+      // Fascia di consegna scelta (null = appena possibile).
+      delivery_slot: order.deliverySlot ?? null,
     }) // id, created_at, status li mette il DB
     .select(ORDER_COLUMNS)
     .single(); // ci facciamo restituire la riga appena creata
 
-  if (error) throw error;
+  if (error) {
+    // Fascia riempita tra la scelta e l'invio (garanzia del trigger DB):
+    // rilanciamo un errore riconoscibile così il carrello invita a riscegliere.
+    if (error.message?.includes(SLOT_FULL_ERROR)) {
+      throw new Error(SLOT_FULL_ERROR);
+    }
+    throw error;
+  }
   return data as Order;
 }
 

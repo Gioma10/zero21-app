@@ -18,8 +18,14 @@ import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { useAuth } from "@/context/auth";
 import { useCart } from "@/context/cart";
 import { useTheme } from "@/hooks/use-theme";
-import { useCreateOrder } from "@/hooks/use-orders";
+import { SLOT_FULL_ERROR, useCreateOrder } from "@/hooks/use-orders";
 import { useDeliveryFee } from "@/hooks/use-settings";
+import { useRestaurant } from "@/hooks/use-restaurants";
+import {
+  useDeliverySlots,
+  type AvailableSlotGroup,
+} from "@/hooks/use-delivery-slots";
+import { formatSlotRange, hasOpeningHours } from "@/lib/slots";
 import { ZoneSelect } from "@/components/zone-select";
 import { DEFAULT_ZONE, isValidZone, zipForZone } from "@/constants/zones";
 import { checkDeliveryArea, deliveryAreaError } from "@/lib/geocode";
@@ -68,10 +74,21 @@ export default function CartScreen() {
   const { data: deliveryFee = 0 } = useDeliveryFee();
   const total = cart.subtotal + deliveryFee;
 
+  // --- Fascia di consegna ---
+  // Tutti i piatti sono dello stesso ristorante: il vendorId = restaurantId.
+  const vendorId = cart.items[0]?.dish.restaurantId;
+  const { data: restaurant } = useRestaurant(vendorId ?? "");
+  const slotsQuery = useDeliverySlots(restaurant);
+  // Il ristorante gestisce fasce orarie? (se no, ordine "appena possibile").
+  const slotsConfigured = hasOpeningHours(restaurant?.openingHours);
+  const slotGroups = slotsQuery.data?.groups ?? [];
+  const hasFreeSlot = slotGroups.some((g) => g.slots.some((s) => !s.full));
+  const [slot, setSlot] = useState<string | null>(null);
+  const slotMinutes = restaurant?.slotMinutes ?? 30;
+
   async function checkout() {
     // Tutti i piatti del carrello appartengono allo stesso ristorante:
-    // il vendorId dell'ordine è il restaurantId dei piatti.
-    const vendorId = cart.items[0]?.dish.restaurantId;
+    // il vendorId dell'ordine è il restaurantId dei piatti (calcolato sopra).
     if (!vendorId) {
       Alert.alert("Errore", "Carrello vuoto.");
       return;
@@ -103,6 +120,18 @@ export default function CartScreen() {
       return;
     }
 
+    // Fascia di consegna: se il ristorante gestisce gli orari, la scelta è
+    // obbligatoria (evita ordini simultanei). Altrimenti resta "appena possibile".
+    if (slotsConfigured && !slot) {
+      Alert.alert(
+        "Scegli un orario",
+        hasFreeSlot
+          ? "Seleziona una fascia di consegna per procedere."
+          : "Nessuna fascia disponibile al momento. Riprova più tardi.",
+      );
+      return;
+    }
+
     // L'indirizzo (eventualmente modificato qui) deve essere nel paese di
     // Arzachena: riverifichiamo prima di creare l'ordine.
     setVerifying(true);
@@ -126,13 +155,26 @@ export default function CartScreen() {
         vendorId,
         address,
         phone,
+        // Fascia scelta solo se il ristorante gestisce gli orari.
+        deliverySlot: slotsConfigured ? slot : null,
       },
       {
         onSuccess: (order) => {
           cart.clear();
           router.replace({ pathname: "/order-success", params: { id: order.id } });
         },
-        onError: () => {
+        onError: (error) => {
+          // La fascia si è riempita tra la scelta e l'invio (garanzia DB):
+          // invitiamo a riscegliere e rinfreschiamo la disponibilità.
+          if (error instanceof Error && error.message === SLOT_FULL_ERROR) {
+            setSlot(null);
+            slotsQuery.refetch();
+            Alert.alert(
+              "Fascia esaurita",
+              "Quella fascia si è appena riempita. Scegline un'altra.",
+            );
+            return;
+          }
           Alert.alert("Errore", "Non è stato possibile inviare l'ordine. Riprova.");
         },
       },
@@ -261,6 +303,20 @@ export default function CartScreen() {
                 />
               </View>
 
+              {/* FASCIA DI CONSEGNA — solo se il ristorante gestisce gli orari */}
+              {slotsConfigured && (
+                <SlotPicker
+                  groups={slotGroups}
+                  selected={slot}
+                  onSelect={setSlot}
+                  slotMinutes={slotMinutes}
+                  loading={slotsQuery.isLoading}
+                  hasFree={hasFreeSlot}
+                  styles={styles}
+                  colors={colors}
+                />
+              )}
+
               {/* RIEPILOGO */}
               <View style={styles.summary}>
                 <SummaryRow label="Subtotale" value={cart.subtotal} />
@@ -320,6 +376,83 @@ const summaryRowStyle = {
   justifyContent: "space-between" as const,
   alignItems: "center" as const,
 };
+
+// Selettore delle fasce di consegna, raggruppate per giorno (Oggi/Domani). Le
+// fasce piene sono disabilitate: gli ordini si distribuiscono nel tempo.
+function SlotPicker({
+  groups,
+  selected,
+  onSelect,
+  slotMinutes,
+  loading,
+  hasFree,
+  styles,
+  colors,
+}: {
+  groups: AvailableSlotGroup[];
+  selected: string | null;
+  onSelect: (start: string) => void;
+  slotMinutes: number;
+  loading: boolean;
+  hasFree: boolean;
+  styles: ReturnType<typeof createStyles>;
+  colors: Palette;
+}) {
+  return (
+    <View style={styles.slotCard}>
+      <View style={styles.addressHeader}>
+        <SymbolView name="clock" size={18} tintColor={colors.accent} />
+        <ThemedText type="smallBold">Quando vuoi la consegna?</ThemedText>
+      </View>
+
+      {loading ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Carico le fasce disponibili…
+        </ThemedText>
+      ) : !hasFree ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Nessuna fascia disponibile al momento. Riprova più tardi.
+        </ThemedText>
+      ) : (
+        groups.map((group) => (
+          <View key={group.label} style={styles.slotGroup}>
+            <ThemedText type="small" themeColor="textSecondary">
+              {group.label}
+            </ThemedText>
+            <View style={styles.slotRow}>
+              {group.slots.map((s) => {
+                const isSelected = s.start === selected;
+                return (
+                  <Pressable
+                    key={s.start}
+                    disabled={s.full}
+                    onPress={() => onSelect(s.start)}
+                    style={[
+                      styles.slotChip,
+                      isSelected && styles.slotChipSelected,
+                      s.full && styles.slotChipFull,
+                    ]}
+                  >
+                    <ThemedText
+                      type="small"
+                      style={[
+                        styles.slotChipText,
+                        isSelected && styles.slotChipTextSelected,
+                        s.full && styles.slotChipTextFull,
+                      ]}
+                    >
+                      {formatSlotRange(s.start, slotMinutes)}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ))
+      )}
+    </View>
+  );
+}
 
 const createStyles = (colors: Palette) =>
   StyleSheet.create({
@@ -411,6 +544,48 @@ const createStyles = (colors: Palette) =>
     addressRow: {
       flexDirection: "row",
       gap: Spacing.two,
+    },
+    slotCard: {
+      gap: Spacing.two,
+      padding: Spacing.three,
+      borderRadius: Radii.card,
+      backgroundColor: colors.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    slotGroup: {
+      gap: Spacing.one,
+    },
+    slotRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: Spacing.two,
+    },
+    slotChip: {
+      paddingHorizontal: Spacing.three,
+      paddingVertical: Spacing.two,
+      borderRadius: Radii.sm,
+      backgroundColor: colors.background,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    slotChipSelected: {
+      backgroundColor: colors.accent,
+      borderColor: colors.accent,
+    },
+    slotChipFull: {
+      opacity: 0.4,
+    },
+    slotChipText: {
+      color: colors.text,
+      fontWeight: "600",
+    },
+    slotChipTextSelected: {
+      color: colors.background,
+    },
+    slotChipTextFull: {
+      textDecorationLine: "line-through",
+      color: colors.textSecondary,
     },
     addressCity: {
       flex: 1,

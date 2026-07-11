@@ -57,6 +57,31 @@ do $$ begin
     check (commission_rate is null or (commission_rate >= 0 and commission_rate <= 1));
 exception when duplicate_object then null; end $$;
 
+-- Gestione orario ordini: FASCE DI CONSEGNA a scelta (per ristorante). Il vendor
+-- configura orari di apertura, durata/capienza delle fasce e l'anticipo minimo;
+-- la delivery app genera gli slot prenotabili e ci instrada gli ordini così da
+-- distribuirli nel tempo (chi gestisce da solo non lavora ordini simultanei).
+alter table public.restaurants add column if not exists slot_minutes       int   not null default 30;
+alter table public.restaurants add column if not exists slot_capacity      int   not null default 1;
+alter table public.restaurants add column if not exists order_lead_minutes int   not null default 30;
+-- Orari di apertura per giorno settimana. Chiavi: mon,tue,wed,thu,fri,sat,sun;
+-- valore = array di intervalli ["HH:MM","HH:MM"]. Chiave assente / array vuoto
+-- = chiuso quel giorno. '{}' (default) = NON configurato → nessuno slot in app
+-- e l'ordine resta "appena possibile" (delivery_slot NULL): retro-compatibile.
+alter table public.restaurants add column if not exists opening_hours      jsonb not null default '{}'::jsonb;
+do $$ begin
+  alter table public.restaurants
+    add constraint restaurants_slot_minutes_check       check (slot_minutes > 0);
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.restaurants
+    add constraint restaurants_slot_capacity_check      check (slot_capacity > 0);
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.restaurants
+    add constraint restaurants_order_lead_minutes_check check (order_lead_minutes >= 0);
+exception when duplicate_object then null; end $$;
+
 -- ---- restaurant_billing ----------------------------------------------------
 -- Dati fiscali del vendor per la fatturazione ZERO21 → ristorante. Tabella
 -- SEPARATA da restaurants perché quest'ultima ha lettura PUBBLICA (anon key
@@ -151,6 +176,10 @@ alter table public.orders add column if not exists contact_phone   text;
 -- Snapshot del costo di consegna (ricavo ZERO21 100%). Ordini storici → 0,
 -- così restano invariati: food = total, consegna = 0.
 alter table public.orders add column if not exists delivery_fee    numeric not null default 0;
+-- Fascia di consegna scelta dal cliente al checkout: istante di INIZIO slot
+-- (wall-clock Europe/Rome salvato come timestamptz assoluto). NULL = ordine
+-- "appena possibile" (ordini storici e ristoranti senza orari configurati).
+alter table public.orders add column if not exists delivery_slot   timestamptz;
 
 -- Normalizza eventuali stati "legacy" (vecchie etichette italiane) ai codici,
 -- così il successivo CHECK non fallisce su righe preesistenti.
@@ -195,6 +224,8 @@ exception when duplicate_object then null; end $$;
 create index if not exists orders_vendor_id_idx on public.orders (vendor_id);
 -- Lista "i miei ordini" lato cliente.
 create index if not exists orders_user_id_idx on public.orders (user_id);
+-- Conteggio ordini per fascia (capienza slot) e vista vendor per orario consegna.
+create index if not exists orders_vendor_slot_idx on public.orders (vendor_id, delivery_slot);
 
 -- ---- platform_settings -----------------------------------------------------
 -- Configurazione di piattaforma a RIGA SINGOLA (id = 'global'). È la FONTE

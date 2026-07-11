@@ -6,6 +6,7 @@ import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { useCancelOrder } from "@/hooks/use-orders";
 import { useTheme } from "@/hooks/use-theme";
 import { orderStatusLabelOf, type Order, type OrderStatus } from "@/types";
+import { formatSlotStart } from "@/lib/slots";
 
 // Formatta il timestamp ISO del DB in "13/06 · 20:45" (senza dipendere da Intl).
 function formatDate(iso: string) {
@@ -81,6 +82,11 @@ export function OrderCard({ order }: { order: Order }) {
       <ThemedText type="small" themeColor="textSecondary">
         {formatDate(order.createdAt)}
       </ThemedText>
+      {order.deliverySlot && (
+        <ThemedText type="small" style={{ color: colors.accent }}>
+          Consegna: {formatSlotStart(order.deliverySlot)}
+        </ThemedText>
+      )}
       <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
         {summary}
       </ThemedText>

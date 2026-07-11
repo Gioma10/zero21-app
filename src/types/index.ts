@@ -22,6 +22,13 @@ export type Dish = {
   section: string;
 };
 
+// Giorni della settimana come chiavi degli orari di apertura.
+export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+// Orari di apertura per giorno: array di intervalli ["HH:MM","HH:MM"].
+// Chiave assente o array vuoto = chiuso quel giorno. {} = non configurato.
+export type OpeningHours = Partial<Record<Weekday, [string, string][]>>;
+
 // Un ristorante della Home
 export type Restaurant = {
   id: string;
@@ -33,6 +40,11 @@ export type Restaurant = {
   deliveryTime: string; // es. "30-40 min"
   // Il costo di consegna NON è per ristorante: è unico di piattaforma
   // (platform_settings.delivery_fee). Vedi hook useDeliveryFee().
+  // --- Gestione orario ordini: fasce di consegna a scelta ---
+  slotMinutes: number; // durata di ogni fascia (min)
+  slotCapacity: number; // ordini max per fascia
+  orderLeadMinutes: number; // anticipo minimo dal "adesso" al primo slot (min)
+  openingHours: OpeningHours; // orari per giorno; {} = non configurato (nessuno slot)
 };
 
 // Una riga del carrello: un piatto + la quantità scelta
@@ -105,4 +117,7 @@ export type Order = {
   // Costo di consegna incluso in `total` (snapshot al checkout). Ricavo ZERO21
   // al 100%. Ordini storici: 0.
   deliveryFee: number;
+  // Fascia di consegna scelta al checkout: istante ISO di inizio slot. NULL =
+  // ordine "appena possibile" (storici / ristoranti senza orari configurati).
+  deliverySlot: string | null;
 };

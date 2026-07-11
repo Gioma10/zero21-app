@@ -1,4 +1,24 @@
-import type { Category, Dish, Restaurant } from "@/types";
+import type { Category, Dish, OpeningHours, Restaurant } from "@/types";
+
+// Orari demo per i ristoranti mock: pranzo + cena tutti i giorni, così in
+// sviluppo il selettore delle fasce di consegna è visibile.
+const MOCK_HOURS: OpeningHours = {
+  mon: [["12:00", "15:00"], ["19:00", "23:00"]],
+  tue: [["12:00", "15:00"], ["19:00", "23:00"]],
+  wed: [["12:00", "15:00"], ["19:00", "23:00"]],
+  thu: [["12:00", "15:00"], ["19:00", "23:00"]],
+  fri: [["12:00", "15:00"], ["19:00", "23:30"]],
+  sat: [["12:00", "15:00"], ["19:00", "23:30"]],
+  sun: [["12:00", "15:00"], ["19:00", "23:00"]],
+};
+
+// Config comune delle fasce per i ristoranti mock (1 ordine per fascia).
+const MOCK_SLOTS = {
+  slotMinutes: 30,
+  slotCapacity: 1,
+  orderLeadMinutes: 30,
+  openingHours: MOCK_HOURS,
+};
 
 // Le chip in cima alla Home: filtrano i ristoranti per "tag"/cucina.
 export const categories: Category[] = [
@@ -17,6 +37,7 @@ export const restaurants: Restaurant[] = [
     rating: 4.8,
     minOrder: 20,
     deliveryTime: "30-40 min",
+    ...MOCK_SLOTS,
   },
   {
     id: "r2",
@@ -26,6 +47,7 @@ export const restaurants: Restaurant[] = [
     rating: 4.6,
     minOrder: 15,
     deliveryTime: "25-35 min",
+    ...MOCK_SLOTS,
   },
   {
     id: "r3",
@@ -35,6 +57,7 @@ export const restaurants: Restaurant[] = [
     rating: 4.7,
     minOrder: 18,
     deliveryTime: "20-30 min",
+    ...MOCK_SLOTS,
   },
 ];
 

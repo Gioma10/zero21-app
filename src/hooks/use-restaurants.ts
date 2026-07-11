@@ -6,7 +6,7 @@ import type { Restaurant } from "@/types";
 // Le colonne da leggere. "coverImage:cover_image" = prendi cover_image
 // ma chiamala coverImage nel risultato → combacia col tipo Restaurant.
 const RESTAURANT_COLUMNS =
-  "id, name, coverImage:cover_image, tags, rating, minOrder:min_order, deliveryTime:delivery_time";
+  "id, name, coverImage:cover_image, tags, rating, minOrder:min_order, deliveryTime:delivery_time, slotMinutes:slot_minutes, slotCapacity:slot_capacity, orderLeadMinutes:order_lead_minutes, openingHours:opening_hours";
 
 // La "queryFn": fa la chiamata e, se Supabase segnala un errore, lo LANCIA
 // (così TanStack Query capisce che è fallita).

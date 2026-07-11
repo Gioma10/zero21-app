@@ -131,6 +131,74 @@ exception
   when duplicate_object then null;
 end $$;
 
+-- ---- fasce di consegna: conteggi pubblici + capienza -----------------------
+-- La RLS sopra impedisce ai client (anon/authenticated) di leggere gli ordini
+-- ALTRUI: senza aiuto lato DB la delivery app non potrebbe sapere se una fascia
+-- è già piena. Questa funzione gira in SECURITY DEFINER e restituisce SOLO
+-- (slot, numero di ordini) per un ristorante in una finestra temporale — nessun
+-- dato del cliente trapela. La usa l'app per disabilitare gli slot al completo.
+create or replace function public.slot_booked_counts(
+  p_vendor text,
+  p_from   timestamptz,
+  p_to     timestamptz
+)
+returns table (slot timestamptz, booked int)
+language sql
+security definer
+set search_path = public
+as $$
+  select delivery_slot as slot, count(*)::int as booked
+  from public.orders
+  where vendor_id = p_vendor
+    and delivery_slot is not null
+    and delivery_slot >= p_from
+    and delivery_slot <= p_to
+    and status <> 'cancelled'
+  group by delivery_slot
+$$;
+
+grant execute on function public.slot_booked_counts(text, timestamptz, timestamptz)
+  to anon, authenticated;
+
+-- Garanzia REALE della capienza: anche con due checkout simultanei sulla stessa
+-- fascia, il trigger conta gli ordini già presenti (SECURITY DEFINER → vede tutte
+-- le righe, oltre la RLS) e rifiuta l'insert se lo slot è al completo. La delivery
+-- app fa solo un filtro ottimistico lato client; QUESTA è la garanzia vera.
+create or replace function public.enforce_slot_capacity()
+returns trigger language plpgsql security definer
+set search_path = public as $$
+declare
+  cap   int;
+  taken int;
+begin
+  if new.delivery_slot is null then
+    return new; -- ordine "appena possibile": nessuna fascia da limitare
+  end if;
+  select slot_capacity into cap from public.restaurants where id = new.vendor_id;
+  if cap is null then
+    return new; -- ristorante inesistente/senza config: nessun limite
+  end if;
+  -- Serializza gli insert sulla STESSA fascia (per qualsiasi capienza): senza,
+  -- due checkout simultanei potrebbero contare 0 entrambi e sforare la capienza.
+  perform pg_advisory_xact_lock(
+    hashtext(new.vendor_id || '|' || new.delivery_slot::text)
+  );
+  select count(*) into taken
+  from public.orders
+  where vendor_id = new.vendor_id
+    and delivery_slot = new.delivery_slot
+    and status <> 'cancelled';
+  if taken >= cap then
+    raise exception 'SLOT_FULL' using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists orders_enforce_slot_capacity on public.orders;
+create trigger orders_enforce_slot_capacity
+  before insert on public.orders
+  for each row execute function public.enforce_slot_capacity();
+
 -- ---- platform_settings -----------------------------------------------------
 alter table public.platform_settings enable row level security;
 
