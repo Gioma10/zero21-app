@@ -23,7 +23,6 @@ const WEEKDAY_KEYS: Weekday[] = [
 
 export type SlotConfig = {
   slotMinutes: number;
-  orderLeadMinutes: number;
   openingHours: OpeningHours;
 };
 
@@ -46,17 +45,24 @@ function toMinutes(hhmm: string): number | null {
   return h * 60 + min;
 }
 
-// Genera le fasce candidate per OGGI e DOMANI (prima del filtro capienza).
-// `slotMinutes` è anche il passo tra una fascia e l'altra.
+// Quanti giorni in avanti cercare orari prenotabili. App same-day (stile Glovo):
+// si ordina solo per OGGI, quindi 1 giorno. Esauriti gli orari di oggi il picker
+// mostra "nessun orario disponibile". (Alzare a 2+ per abilitare i giorni futuri.)
+const HORIZON_DAYS = 1;
+
+// Genera gli orari candidati per i prossimi HORIZON_DAYS giorni (prima del filtro
+// capienza). `slotMinutes` è anche il passo tra un orario e l'altro. Un orario è
+// prenotabile finché NON è ancora passato (nessun anticipo/cuscinetto): quello in
+// corso resta disponibile fino alla fine dell'intervallo.
 export function generateSlotGroups(
   cfg: SlotConfig,
   now: Date = new Date(),
 ): SlotGroup[] {
   const step = Math.max(1, Math.floor(cfg.slotMinutes || 0));
-  const earliest = now.getTime() + Math.max(0, cfg.orderLeadMinutes) * 60_000;
+  const nowMs = now.getTime();
   const groups: SlotGroup[] = [];
 
-  for (let offset = 0; offset < 2; offset++) {
+  for (let offset = 0; offset < HORIZON_DAYS; offset++) {
     const day = new Date(
       now.getFullYear(),
       now.getMonth(),
@@ -79,15 +85,24 @@ export function generateSlotGroups(
           0,
           m,
         );
-        if (start.getTime() < earliest) continue;
+        // Prenotabile finché non è finita: scarta solo le fasce già concluse.
+        if (start.getTime() + step * 60_000 <= nowMs) continue;
         slots.push({ start: start.toISOString() });
       }
     }
     if (slots.length > 0) {
-      groups.push({ label: offset === 0 ? "Oggi" : "Domani", slots });
+      groups.push({ label: dayGroupLabel(day, offset), slots });
     }
   }
   return groups;
+}
+
+// Etichetta del gruppo-giorno: "Oggi", "Domani", poi "Sab 12" (giorno + data).
+function dayGroupLabel(day: Date, offset: number): string {
+  if (offset === 0) return "Oggi";
+  if (offset === 1) return "Domani";
+  const wd = DAY_SHORT[day.getDay()];
+  return `${wd.charAt(0).toUpperCase()}${wd.slice(1)} ${day.getDate()}`;
 }
 
 function pad(n: number): string {
@@ -98,31 +113,32 @@ function hhmm(d: Date): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-// "20:00–20:30" (ora locale) data la durata fascia.
-export function formatSlotRange(startISO: string, slotMinutes: number): string {
-  const start = new Date(startISO);
-  const end = new Date(start.getTime() + slotMinutes * 60_000);
-  return `${hhmm(start)}–${hhmm(end)}`;
+// Orario esatto di arrivo, "20:00" (ora locale). Ogni fascia è un ORARIO di
+// consegna preciso scelto dal cliente, non una finestra.
+export function formatSlotTime(startISO: string): string {
+  return hhmm(new Date(startISO));
 }
 
 const DAY_SHORT = ["dom", "lun", "mar", "mer", "gio", "ven", "sab"];
 
-// "Oggi 20:00" / "Domani 20:00" / "gio 20:00" per le viste ordine (senza durata).
-export function formatSlotStart(startISO: string): string {
-  const d = new Date(startISO);
+// Etichetta relativa del giorno: "Oggi" / "Domani" / "Sab 12".
+function dayLabelOf(d: Date): string {
   const now = new Date();
   const startOfToday = new Date(
     now.getFullYear(),
     now.getMonth(),
     now.getDate(),
   ).getTime();
-  const dayOf = new Date(
-    d.getFullYear(),
-    d.getMonth(),
-    d.getDate(),
-  ).getTime();
+  const dayOf = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   const diffDays = Math.round((dayOf - startOfToday) / 86_400_000);
-  const label =
-    diffDays === 0 ? "Oggi" : diffDays === 1 ? "Domani" : DAY_SHORT[d.getDay()];
-  return `${label} ${hhmm(d)}`;
+  if (diffDays === 0) return "Oggi";
+  if (diffDays === 1) return "Domani";
+  const wd = DAY_SHORT[d.getDay()];
+  return `${wd.charAt(0).toUpperCase()}${wd.slice(1)} ${d.getDate()}`;
+}
+
+// "Oggi 20:00" — giorno + orario esatto di arrivo, per le viste ordine.
+export function formatSlotAt(startISO: string): string {
+  const d = new Date(startISO);
+  return `${dayLabelOf(d)} ${hhmm(d)}`;
 }

@@ -58,7 +58,6 @@ export function useDeliverySlots(restaurant: Restaurant | null | undefined) {
       const r = restaurant!;
       const config: SlotConfig = {
         slotMinutes: r.slotMinutes,
-        orderLeadMinutes: r.orderLeadMinutes,
         openingHours: r.openingHours,
       };
       const groups = generateSlotGroups(config);

@@ -16,7 +16,6 @@ const MOCK_HOURS: OpeningHours = {
 const MOCK_SLOTS = {
   slotMinutes: 30,
   slotCapacity: 1,
-  orderLeadMinutes: 30,
   openingHours: MOCK_HOURS,
 };
 

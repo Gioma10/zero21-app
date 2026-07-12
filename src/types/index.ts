@@ -43,7 +43,6 @@ export type Restaurant = {
   // --- Gestione orario ordini: fasce di consegna a scelta ---
   slotMinutes: number; // durata di ogni fascia (min)
   slotCapacity: number; // ordini max per fascia
-  orderLeadMinutes: number; // anticipo minimo dal "adesso" al primo slot (min)
   openingHours: OpeningHours; // orari per giorno; {} = non configurato (nessuno slot)
 };
 

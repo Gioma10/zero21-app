@@ -25,7 +25,7 @@ import {
   useDeliverySlots,
   type AvailableSlotGroup,
 } from "@/hooks/use-delivery-slots";
-import { formatSlotRange, hasOpeningHours } from "@/lib/slots";
+import { formatSlotTime, hasOpeningHours } from "@/lib/slots";
 import { ZoneSelect } from "@/components/zone-select";
 import { DEFAULT_ZONE, isValidZone, zipForZone } from "@/constants/zones";
 import { checkDeliveryArea, deliveryAreaError } from "@/lib/geocode";
@@ -84,7 +84,6 @@ export default function CartScreen() {
   const slotGroups = slotsQuery.data?.groups ?? [];
   const hasFreeSlot = slotGroups.some((g) => g.slots.some((s) => !s.full));
   const [slot, setSlot] = useState<string | null>(null);
-  const slotMinutes = restaurant?.slotMinutes ?? 30;
 
   async function checkout() {
     // Tutti i piatti del carrello appartengono allo stesso ristorante:
@@ -309,7 +308,6 @@ export default function CartScreen() {
                   groups={slotGroups}
                   selected={slot}
                   onSelect={setSlot}
-                  slotMinutes={slotMinutes}
                   loading={slotsQuery.isLoading}
                   hasFree={hasFreeSlot}
                   styles={styles}
@@ -383,7 +381,6 @@ function SlotPicker({
   groups,
   selected,
   onSelect,
-  slotMinutes,
   loading,
   hasFree,
   styles,
@@ -392,7 +389,6 @@ function SlotPicker({
   groups: AvailableSlotGroup[];
   selected: string | null;
   onSelect: (start: string) => void;
-  slotMinutes: number;
   loading: boolean;
   hasFree: boolean;
   styles: ReturnType<typeof createStyles>;
@@ -441,7 +437,7 @@ function SlotPicker({
                         s.full && styles.slotChipTextFull,
                       ]}
                     >
-                      {formatSlotRange(s.start, slotMinutes)}
+                      {formatSlotTime(s.start)}
                     </ThemedText>
                   </Pressable>
                 );

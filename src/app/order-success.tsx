@@ -10,7 +10,7 @@ import { Radii, Spacing, type Palette } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { useOrder } from "@/hooks/use-orders";
 import { orderStatusLabelOf } from "@/types";
-import { formatSlotStart } from "@/lib/slots";
+import { formatSlotAt } from "@/lib/slots";
 
 export default function OrderSuccessScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,7 +46,7 @@ export default function OrderSuccessScreen() {
           </ThemedText>
           {order.deliverySlot && (
             <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
-              Consegna: {formatSlotStart(order.deliverySlot)}
+              Arrivo previsto {formatSlotAt(order.deliverySlot)}
             </ThemedText>
           )}
 
