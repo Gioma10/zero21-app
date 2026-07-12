@@ -14,7 +14,6 @@ import { useTheme } from "@/hooks/use-theme";
 
 const menuItems: { icon: SFSymbol; label: string; route?: string }[] = [
   { icon: "mappin.and.ellipse", label: "I miei indirizzi", route: "/addresses" },
-  { icon: "bell.fill", label: "Notifiche" },
   { icon: "questionmark.circle.fill", label: "Aiuto" },
 ];
 

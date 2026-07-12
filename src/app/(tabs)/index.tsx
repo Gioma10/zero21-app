@@ -64,7 +64,12 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.screen}>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: Spacing.six }]}
+        contentContainerStyle={[
+          styles.content,
+          // La tab bar è nativa e si sovrappone: lasciamo spazio sotto (barra +
+          // safe area) così le ultime card non restano coperte.
+          { paddingBottom: insets.bottom + Spacing.six },
+        ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

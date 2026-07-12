@@ -73,13 +73,19 @@ export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
             Min € {restaurant.minOrder.toFixed(0)}
           </ThemedText>
           <View style={styles.spacer} />
-          <ThemedText type="smallBold" style={styles.fee}>
-            {deliveryFee == null
-              ? ""
-              : freeDelivery
-                ? "Gratis"
-                : `€ ${deliveryFee.toFixed(2)}`}
-          </ThemedText>
+          {/* Costo di consegna, etichettato: icona bici + "Consegna" + prezzo,
+              così non sembra un numero messo lì a caso. */}
+          {deliveryFee != null && (
+            <View style={styles.metaItem}>
+              <SymbolView name="bicycle" size={13} tintColor={colors.accent} />
+              <ThemedText type="small" themeColor="textSecondary">
+                Consegna
+              </ThemedText>
+              <ThemedText type="smallBold" style={styles.fee}>
+                {freeDelivery ? "Gratis" : `€ ${deliveryFee.toFixed(2)}`}
+              </ThemedText>
+            </View>
+          )}
         </View>
       </PressableScale>
     </Link>
