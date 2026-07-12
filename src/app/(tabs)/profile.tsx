@@ -13,6 +13,7 @@ import { useAuth } from "@/context/auth";
 import { useTheme } from "@/hooks/use-theme";
 
 const menuItems: { icon: SFSymbol; label: string; route?: string }[] = [
+  { icon: "person.fill", label: "Modifica profilo", route: "/edit-profile" },
   { icon: "mappin.and.ellipse", label: "I miei indirizzi", route: "/addresses" },
   { icon: "questionmark.circle.fill", label: "Aiuto" },
 ];

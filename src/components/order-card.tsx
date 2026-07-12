@@ -43,7 +43,7 @@ export function OrderCard({ order }: { order: Order }) {
   function confirmCancel() {
     Alert.alert(
       "Annullare l'ordine?",
-      `L'ordine #${order.id.slice(0, 8)} verrà annullato. Puoi farlo solo finché il ristorante non lo accetta.`,
+      `L'ordine #${order.id.slice(0, 6).toUpperCase()} verrà annullato. Puoi farlo solo finché il ristorante non lo accetta.`,
       [
         { text: "Torna indietro", style: "cancel" },
         {
@@ -70,7 +70,7 @@ export function OrderCard({ order }: { order: Order }) {
   return (
     <View style={styles.card}>
       <View style={styles.row}>
-        <ThemedText type="smallBold">Ordine #{order.id.slice(0, 8)}</ThemedText>
+        <ThemedText type="smallBold">Ordine #{order.id.slice(0, 6).toUpperCase()}</ThemedText>
         <View style={[styles.badge, { borderColor: color }]}>
           <View style={[styles.dot, { backgroundColor: color }]} />
           <ThemedText type="small" style={{ color }}>

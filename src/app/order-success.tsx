@@ -42,7 +42,7 @@ export default function OrderSuccessScreen() {
             Ordine confermato!
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
-            Ordine #{order.id.slice(0, 8)} · {orderStatusLabelOf(order.status)}
+            Ordine #{order.id.slice(0, 6).toUpperCase()} · {orderStatusLabelOf(order.status)}
           </ThemedText>
           {order.deliverySlot && (
             <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>

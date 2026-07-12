@@ -16,6 +16,11 @@ type AuthContextValue = {
   ) => Promise<{ error: string | null }>;
   // Aggiorna l'indirizzo di consegna predefinito (user_metadata.address).
   updateAddress: (address: DeliveryAddress) => Promise<{ error: string | null }>;
+  // Aggiorna nome visualizzato e telefono (user_metadata).
+  updateProfile: (profile: {
+    displayName: string;
+    phone: string;
+  }) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -73,6 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   }
 
+  async function updateProfile(profile: { displayName: string; phone: string }) {
+    const { error } = await supabase.auth.updateUser({
+      data: { display_name: profile.displayName, phone: profile.phone },
+    });
+    return { error: error?.message ?? null };
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
   }
@@ -86,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         updateAddress,
+        updateProfile,
         signOut,
       }}
     >

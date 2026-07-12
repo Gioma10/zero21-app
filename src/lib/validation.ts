@@ -15,6 +15,28 @@ const email = z
     "Email non valida",
   );
 
+// ---- Telefono --------------------------------------------------------------
+// Toglie spazi, punti, trattini e parentesi: tiene solo cifre e l'eventuale +
+// del prefisso internazionale. Usata sia per validare sia per sanificare
+// l'input mentre l'utente digita.
+export function normalizePhone(raw: string): string {
+  return raw.replace(/[^\d+]/g, "");
+}
+
+// Cellulare italiano: opzionale prefisso +39/0039, poi un numero che inizia
+// per 3 e ha 10 cifre in totale (es. 333 1234567).
+const ITALIAN_MOBILE = /^(?:\+39|0039)?3\d{9}$/;
+
+export function isValidPhone(raw: string): boolean {
+  return ITALIAN_MOBILE.test(normalizePhone(raw));
+}
+
+const phone = z
+  .string()
+  .trim()
+  .min(1, "Inserisci il numero di telefono")
+  .refine(isValidPhone, "Numero di cellulare non valido (es. 333 1234567)");
+
 // ---- Accesso ---------------------------------------------------------------
 export const signInSchema = z.object({
   email,
@@ -28,10 +50,7 @@ export const signUpSchema = z
   .object({
     name: z.string().trim().min(2, "Inserisci il tuo nome"),
     email,
-    phone: z
-      .string()
-      .trim()
-      .min(6, "Inserisci un numero di telefono valido"),
+    phone,
     street: z.string().trim().min(1, "Inserisci via e civico"),
     // La zona è scelta da un selettore: il CAP è derivato, non inserito a mano.
     zone: z

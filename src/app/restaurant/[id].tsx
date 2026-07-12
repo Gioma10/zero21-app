@@ -85,9 +85,6 @@ export default function RestaurantScreen() {
             <Pressable style={styles.circleBtn} onPress={() => router.back()} hitSlop={8}>
               <SymbolView name="chevron.left" size={18} tintColor="#FFFFFF" />
             </Pressable>
-            <Pressable style={styles.circleBtn} hitSlop={8}>
-              <SymbolView name="heart" size={18} tintColor="#FFFFFF" />
-            </Pressable>
           </SafeAreaView>
         </View>
 
