@@ -69,6 +69,11 @@ alter table public.restaurants add column if not exists order_lead_minutes int  
 -- = chiuso quel giorno. '{}' (default) = NON configurato → nessuno slot in app
 -- e l'ordine resta "appena possibile" (delivery_slot NULL): retro-compatibile.
 alter table public.restaurants add column if not exists opening_hours      jsonb not null default '{}'::jsonb;
+-- Visibilità nel catalogo cliente: true = compare nella delivery app; false =
+-- nascosto (nessun cliente lo vede/ordina). La gestisce SOLO la console admin.
+-- default true → i ristoranti esistenti restano visibili. L'enforcement lato
+-- cliente è nella RLS "public: read restaurants" (policies.sql).
+alter table public.restaurants add column if not exists is_visible         boolean not null default true;
 do $$ begin
   alter table public.restaurants
     add constraint restaurants_slot_minutes_check       check (slot_minutes > 0);

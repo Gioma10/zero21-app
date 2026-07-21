@@ -10,10 +10,15 @@ const RESTAURANT_COLUMNS =
 
 // La "queryFn": fa la chiamata e, se Supabase segnala un errore, lo LANCIA
 // (così TanStack Query capisce che è fallita).
+// Solo ristoranti VISIBILI: l'admin può nascondere un ristorante
+// (restaurants.is_visible = false) e in quel caso non deve comparire nel
+// catalogo. È una "guardia in più" lato client: l'enforcement vero è la RLS
+// ("public: read restaurants" usa is_visible), che copre anche l'accesso per id.
 async function fetchRestaurants(): Promise<Restaurant[]> {
   const { data, error } = await supabase
     .from("restaurants")
     .select(RESTAURANT_COLUMNS)
+    .eq("is_visible", true)
     .order("rating", { ascending: false });
 
   if (error) throw error;
@@ -25,6 +30,7 @@ async function fetchRestaurant(id: string): Promise<Restaurant | null> {
     .from("restaurants")
     .select(RESTAURANT_COLUMNS)
     .eq("id", id)
+    .eq("is_visible", true) // un ristorante nascosto non è raggiungibile nemmeno per link diretto
     .maybeSingle(); // come .single() ma ritorna null invece di lanciare se non c'è
 
   if (error) throw error;

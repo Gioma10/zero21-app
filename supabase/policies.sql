@@ -33,10 +33,14 @@ create policy "vendor: update own restaurant"
   with check (id = auth.uid()::text);
 
 -- Lettura pubblica dei ristoranti: la delivery app (anon key) mostra il catalogo
--- a tutti, anche non loggati. Coesiste con la policy "vendor" (le SELECT sono in OR).
+-- a tutti, anche non loggati — MA solo i ristoranti VISIBILI (is_visible = true).
+-- L'admin può nascondere un ristorante (console admin, service role) e così
+-- sparisce dal catalogo pubblico anche via link diretto. Coesiste con la policy
+-- "vendor" (le SELECT sono in OR): il vendor continua a vedere la PROPRIA riga
+-- anche se nascosta, e l'admin (service role) bypassa comunque la RLS.
 drop policy if exists "public: read restaurants" on public.restaurants;
 create policy "public: read restaurants"
-  on public.restaurants for select using (true);
+  on public.restaurants for select using (is_visible);
 
 -- Blindatura della commissione: `restaurants.commission_rate` è un dato di
 -- piattaforma, lo può cambiare SOLO la console admin (service role). Il vendor
